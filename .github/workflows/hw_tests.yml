@@ -1,0 +1,57 @@
+# Glyph — Hardware test runner
+#
+# Runs hardware-in-the-loop tests. Triggered on demand or on a schedule.
+# These tests require physical hardware and are not run on every push.
+
+name: Hardware Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      board:
+        description: 'Target board'
+        required: true
+        default: 'shrike-lite'
+        type: choice
+        options:
+          - shrike-lite
+          - pico
+          - feather-rp2040
+  schedule:
+    # Weekly: Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+
+jobs:
+  hw-test:
+    name: Hardware test (${{ inputs.board || 'shrike-lite' }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install GNAT Ada compiler
+        uses: ada-lang/setup-gnat@v2
+        with:
+          version: latest
+
+      - name: Install Alire
+        run: |
+          curl -L -o alr.tar.gz \
+            "https://github.com/alire-project/alire/releases/download/v2.0.0/alr-2.0.0-x86_64-linux.gz"
+          gunzip -c alr.tar.gz > alr
+          chmod +x alr
+          sudo mv alr /usr/local/bin/
+
+      - name: Build hardware test binary
+        run: alr build --target=${{ inputs.board || 'shrike-lite' }}
+
+      - name: Flash target board
+        run: |
+          echo "Hardware flashing will be configured when hardware test runners are available."
+          # Placeholder: picotool or openocd commands go here.
+
+      - name: Run hardware tests
+        run: |
+          echo "Hardware test execution will be configured in a future release."
+          # Placeholder: serial monitor or test harness commands go here.

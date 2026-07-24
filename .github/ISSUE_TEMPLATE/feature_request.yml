@@ -1,0 +1,59 @@
+name: Feature request
+description: Suggest an idea or improvement
+title: '[Feature]: '
+labels: [enhancement]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggest a new feature or improvement for Glyph. Feature requests are reviewed by maintainers and added to the roadmap if they align with the project's goals.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem would this feature solve? Describe the use case.
+      placeholder: 'e.g., I need to draw anti-aliased lines for a data visualization dashboard.'
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the feature you would like to see.
+      placeholder: 'e.g., Add a Draw_Anti_Aliased_Line procedure to Glyph.Drawing.'
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any alternative solutions or workarounds you have considered.
+
+  - type: textarea
+    id: api
+    attributes:
+      label: Proposed API sketch
+      description: If applicable, a sketch of what the API might look like.
+      render: ada
+      placeholder: |
+        procedure Draw_Smooth_Line
+          (Buffer : in out Framebuffer;
+           X1, Y1 : Coordinate;
+           X2, Y2 : Coordinate;
+           Color  : Pixel;
+           Width  : Line_Width := 1);
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have searched the issue tracker for a similar feature request.
+          required: true
+        - label: I have reviewed the project roadmap and goals.
+          required: true

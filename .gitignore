@@ -1,0 +1,73 @@
+# Ada / Alire
+#
+# Ignore build artifacts, object files, library files, executables,
+# and Alire dependency directories.
+
+# Object files
+*.o
+*.ali
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+
+# Alire dependency directory
+alire/
+alire.lock
+
+# Build directories
+build/
+obj/
+bin/
+lib/
+
+# IDE / editor artefacts
+*.swp
+*.swo
+*.swn
+*~
+*.bak
+*.orig
+*.tmp
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.project
+*.classpath
+*.sublime-project
+*.sublime-workspace
+
+# GPR build metadata
+*.gpr.lock
+*.gpr.orig
+
+# Simulation outputs
+*.vcd
+*.ghw
+*.fst
+
+# Documentation generated output
+docs/_build/
+docs/api/_build/
+
+# Test outputs
+tests/*.log
+tests/*.report
+tests/out/
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+coverage/
+lcov.info
+
+# Environment
+.env
+.env.local
+
+# OS metadata
+*.DS_Store
+Desktop.ini

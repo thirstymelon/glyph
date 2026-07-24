@@ -1,0 +1,55 @@
+# Glyph — Release workflow
+#
+# Automates building, testing, and publishing releases.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+env:
+  ALIRE_VERSION: '2.0.0'
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install GNAT Ada compiler
+        uses: ada-lang/setup-gnat@v2
+        with:
+          version: latest
+
+      - name: Install Alire
+        run: |
+          curl -L -o alr.tar.gz \
+            "https://github.com/alire-project/alire/releases/download/v${ALIRE_VERSION}/alr-${ALIRE_VERSION}-x86_64-linux.gz"
+          gunzip -c alr.tar.gz > alr
+          chmod +x alr
+          sudo mv alr /usr/local/bin/
+
+      - name: Build library
+        run: alr build
+
+      - name: Run tests
+        run: alr test
+
+      - name: Generate checksums
+        run: |
+          sha256sum alire.toml > checksums.txt
+          sha256sum src/*.ads src/*.adb >> checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          body_path: CHANGELOG.md
+          files: |
+            checksums.txt
+          draft: false
+          prerelease: false

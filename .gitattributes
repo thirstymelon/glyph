@@ -1,0 +1,31 @@
+# Normalise line endings
+* text=auto eol=lf
+
+# Ada source files
+*.ads text diff=ada
+*.adb text diff=ada
+*.ada text diff=ada
+
+# Project files
+*.gpr text
+*.gpr.lock -text
+
+# Documentation
+*.md text diff=markdown
+*.rst text
+
+# Config files
+*.yml text
+*.yaml text
+*.json text
+*.toml text
+*.cfg text
+
+# Scripts
+*.sh text
+*.py text
+
+# Object files
+*.o binary
+*.ali binary
+*.a binary

@@ -1,0 +1,40 @@
+# EditorConfig – https://editorconfig.org
+#
+# Uniform editor settings for the Glyph project.
+# All contributors should install the EditorConfig plugin for their IDE.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{adb,ads,ada}]
+indent_style = space
+indent_size = 3
+
+[*.{md,rst,txt}]
+indent_style = space
+indent_size = 2
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[*.{json,xml}]
+indent_style = space
+indent_size = 2
+
+[*.gpr]
+indent_style = space
+indent_size = 3
+
+[Makefile]
+indent_style = tab
+indent_size = 4
+
+[*.{sh,bash}]
+indent_style = space
+indent_size = 4
