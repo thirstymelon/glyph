@@ -2,49 +2,35 @@
 
 This document defines the Ada coding conventions for the Glyph project. All source code must conform to these standards.
 
-## Table of contents
-
-- [Language version](#language-version)
-- [Indentation](#indentation)
-- [Line length](#line-length)
-- [Naming conventions](#naming-conventions)
-- [Package organization](#package-organization)
-- [File naming](#file-naming)
-- [Formatting rules](#formatting-rules)
-- [Comment style](#comment-style)
-- [Header format](#header-format)
-- [Documentation style](#documentation-style)
-- [Error handling](#error-handling)
-- [Assertions and contracts](#assertions-and-contracts)
-- [Testing](#testing)
-- [Git commit format](#git-commit-format)
-- [Review checklist](#review-checklist)
-
----
-
 ## Language version
 
-All source code must target Ada 2022. Use of Ada 2022 features such as aspect specifications, contract-based programming, and the container library is encouraged where appropriate.
+All source code must target Ada 2022. Use of Ada 2022 features such as aspect specifications, contract-based programming, and enhanced generics is encouraged where appropriate.
 
-## Indentation
+## Indentation and whitespace
 
-- Use 3 spaces per indentation level.
-- Do not use tabs.
-- Continuation lines should be indented by 6 spaces (2 indentation levels) to distinguish them from nested blocks.
+- 3 spaces per indentation level. No tabs.
+- 6 spaces for continuation lines (to distinguish from nested blocks).
+- One space between keyword and opening parenthesis: `if (X > Y)`.
+- One space around binary operators: `A + B`, not `A+B`.
+- No space between subprogram name and parameter list: `Draw_Line (Buffer, X, Y)`.
+- No space inside parentheses: `(A + B)`, not `( A + B )`.
+- No trailing whitespace at end of lines.
+- One blank line between subprograms.
+- Two blank lines between package sections.
 
 ```ada
 procedure Example is
    -- Indented by 3 spaces
    if Condition then
-      -- Indented by 6 spaces
+      -- Indented by 6 spaces (continuation)
       Do_Something;
    end if;
 end Example;
 ```
 
-## Line length
+## Maximum line length
 
-Maximum line length is 100 characters. This applies to both code and comments.
+100 characters. Applies to both code and comments.
 
 ## Naming conventions
 
@@ -59,21 +45,25 @@ Maximum line length is 100 characters. This applies to both code and comments.
 | Variable | snake_case | `pixel_buffer`, `cursor_position` |
 | Generic formal parameter | Leading `T_` for types, UPPER_SNAKE_CASE for values | `T_Pixel_Type`, `WIDTH` |
 | Named access type | Ending in `_Access` | `Framebuffer_Access` |
-| Exception | Ending in `_Error` | `I2C_Transmission_Error` |
+| Exception | PascalCase ending in `_Error` | `I2C_Transmission_Error`, `I2C_Error` |
 
-### Package naming rules
+### Package naming
 
 - The root package is `Glyph`.
 - Subpackages are named hierarchically: `Glyph.<Subsystem>[.<Component>]`.
 - Package names use capitalized words without underscores: `Glyph.Framebuffer`.
 - Acronyms retain their case: `Glyph.HAL.I2C`.
 
-### Subprogram naming rules
+### Subprogram naming
 
 - Procedures use imperative verbs: `Draw_Line`, `Clear_Buffer`, `Init`.
 - Functions use descriptive nouns, adjectives, or queries: `Get_Pixel`, `Is_Visible`, `Width`.
 - Predicate functions (returning Boolean) should be prefixed with `Is_` or `Has_`.
 - Conversion functions should be prefixed with `To_`: `To_RGB565`, `To_Mono`.
+
+### Keyword case
+
+All Ada keywords are lowercase: `is`, `in`, `out`, `begin`, `end`, `if`, `then`, `else`, `loop`, `for`, `while`, `case`, `when`, `others`, `return`, `constant`, `type`, `subtype`, `package`, `procedure`, `function`, `with`, `use`, `pragma`, `aspect`.
 
 ## Package organization
 
@@ -93,11 +83,10 @@ Within a package specification, items should appear in this order:
 
 1. Package documentation comment.
 2. `with` and `use` clauses.
-3. `private` keyword (for packages with private parts).
-4. Type declarations.
-5. Constant and variable declarations.
-6. Subprogram declarations.
-7. `private` section (if applicable):
+3. Type declarations.
+4. Constant and variable declarations.
+5. Subprogram declarations.
+6. `private` section (if applicable):
    - Private type completions.
    - Implementation subprograms.
    - Internal constants.
@@ -112,7 +101,6 @@ package Glyph.Framebuffer.Mono is
    type Framebuffer is private;
 
    procedure Clear (FB : in out Framebuffer);
-   --  Documentation for Clear.
 
 private
 
@@ -122,6 +110,19 @@ private
 
 end Glyph.Framebuffer.Mono;
 ```
+
+### File organization
+
+Every `.ads` and `.adb` file must include:
+
+1. File header comment.
+2. `with` clauses (alphabetically sorted).
+3. `use` clauses (if any).
+4. Package declaration or body.
+5. Subprogram ordering within packages:
+   - Public subprograms first.
+   - Private subprograms in the `private` section.
+   - Subprogram bodies in `.adb` matching spec order.
 
 ## File naming
 
@@ -157,7 +158,7 @@ end Draw_Line;
 
 ### Parameter formatting
 
-Subprogram parameters should be formatted with one parameter per line when the parameter list is long:
+Long parameter lists place one parameter per line:
 
 ```ada
 procedure Draw_Rectangle
@@ -167,6 +168,12 @@ procedure Draw_Rectangle
    Height   : Positive;
    Color    : Pixel_Type;
    Filled   : Boolean := False);
+```
+
+Short parameter lists may stay on one line:
+
+```ada
+procedure Clear (Buffer : in out Framebuffer);
 ```
 
 ### Operator spacing
@@ -182,8 +189,6 @@ I mod J
 ```
 
 ### Control structures
-
-Spaces after keywords:
 
 ```ada
 if Condition then
@@ -201,6 +206,27 @@ case Value is
       Handle_Other;
 end case;
 ```
+
+### Aspect formatting
+
+```ada
+procedure Set_Pixel
+  (Buffer : in out Framebuffer;
+   X, Y   : Coordinate;
+   Color  : Pixel_Type)
+   with Pre => X < Buffer.Width
+               and then Y < Buffer.Height;
+
+type Coordinate is new Natural
+   with Type_Invariant => Coordinate <= MAX_COORDINATE;
+```
+
+### Use clauses
+
+- `use` clauses are permitted in package bodies.
+- `use type` clauses are preferred over full `use` clauses where applicable.
+- `use` clauses in package specifications should be avoided unless they improve readability significantly.
+- Rename long package names with `package O renames ...` if `use` is undesirable.
 
 ## Comment style
 
@@ -324,14 +350,6 @@ procedure Set_Pixel
    Color  : Pixel_Type)
    with Pre => X < Buffer.Width and then Y < Buffer.Height;
 ```
-
-## Testing
-
-- Test files must be placed in the `tests/` directory following the same hierarchy as `src/`.
-- Test file names should mirror source file names with a `_test` suffix: `glyph-framebuffer-mono_test.adb`.
-- Every public subprogram should have at least one test covering normal operation.
-- Edge cases must be tested explicitly.
-- Regression tests for fixed bugs must be added at the time of the fix.
 
 ## Git commit format
 

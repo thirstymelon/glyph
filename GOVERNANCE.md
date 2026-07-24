@@ -2,13 +2,9 @@
 
 This document describes the governance model for the Glyph project.
 
----
-
 ## Project structure
 
 Glyph is a community-driven open-source project. The project is managed by a group of maintainers who oversee development, review contributions, and make decisions about the project's direction.
-
----
 
 ## Roles
 
@@ -22,8 +18,7 @@ Maintainers are responsible for:
 - Managing releases.
 - Enforcing the code of conduct.
 - Onboarding new contributors and maintainers.
-
-Maintainers are listed in [MAINTAINERS.md](MAINTAINERS.md).
+- Representing the project in the Ada community.
 
 ### Contributors
 
@@ -33,7 +28,31 @@ Contributors are individuals who submit pull requests, file bug reports, or part
 
 Users are individuals or organizations using Glyph in their projects. User feedback is valued and influences the project roadmap.
 
----
+## Current maintainers
+
+| Name | GitHub | Email | Role |
+|------|--------|-------|------|
+| — | — | — | — |
+
+*This section will be populated as the project gains maintainers.*
+
+### Becoming a maintainer
+
+Contributors who demonstrate sustained, high-quality contributions may be invited to become maintainers. Criteria include:
+
+- A history of well-crafted pull requests.
+- Active participation in code reviews and discussions.
+- Understanding of the project architecture and coding standards.
+- Alignment with the project's goals and values.
+- Willingness to commit time to maintainer duties.
+
+### Emeritus maintainers
+
+Maintainers who are no longer active may be moved to emeritus status. Emeritus maintainers retain their recognition but do not have voting rights or review responsibilities.
+
+| Name | GitHub | Period |
+|------|--------|--------|
+| — | — | — |
 
 ## Decision making
 
@@ -51,25 +70,12 @@ Decisions are made through consensus among maintainers. The process:
 - **Major changes** (new features, API changes, architectural changes): Require consensus among maintainers.
 - **Governance changes**: Require a unanimous vote of all maintainers.
 
----
-
 ## Release process
 
-See [RELEASE_PROCESS.md](RELEASE_PROCESS.md) for the detailed release process.
-
-Key points:
-
 - Releases are managed by maintainers.
-- Versioning follows Semantic Versioning 2.0.0 (see [VERSIONING.md](VERSIONING.md)).
+- Versioning follows Semantic Versioning 2.0.0.
 - Release candidates are published for community testing before final releases.
-
----
-
-## Versioning
-
-Glyph follows Semantic Versioning 2.0.0 as described in [VERSIONING.md](VERSIONING.md).
-
----
+- See [CONTRIBUTING.md](CONTRIBUTING.md) for the detailed release checklist.
 
 ## Community contributions
 
@@ -77,11 +83,9 @@ All contributions are welcome. By contributing, you agree to:
 
 1. License your contributions under the Apache License, Version 2.0.
 2. Follow the [Code of Conduct](CODE_OF_CONDUCT.md).
-3. Adhere to the [Coding Standard](CODING_STANDARD.md) and [Style Guide](STYLE_GUIDE.md).
+3. Adhere to the [Coding Standard](CODING_STANDARD.md).
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
-
----
 
 ## Long-term goals
 
@@ -91,8 +95,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 4. Build a sustainable community of contributors and users.
 5. Publish as a first-class Alire crate with professional CI/CD.
 6. Provide comprehensive documentation, tutorials, and examples.
-
----
 
 ## Amendments
 

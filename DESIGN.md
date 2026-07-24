@@ -66,6 +66,154 @@ Every package is designed to be testable in isolation. The framebuffer, canvas, 
 
 ---
 
+## API design principles
+
+### Consistency
+
+Related operations must have consistent naming, parameter ordering, and behaviour across the entire library. If `Draw_Line` takes `(Buffer, X1, Y1, X2, Y2)` then `Draw_Rectangle` should take `(Buffer, X, Y, Width, Height)` following the same parameter style.
+
+### Minimal public surface
+
+Expose only what users need. Everything else is private.
+
+```ada
+--  Good: Minimal public surface.
+package Glyph.Framebuffer is
+   procedure Clear (FB : in out Framebuffer);
+   procedure Draw_Pixel (FB : in out Framebuffer; X, Y : Coordinate; C : Pixel);
+private
+   --  Implementation details hidden.
+end Glyph.Framebuffer;
+
+--  Bad: Internal helpers exposed.
+package Glyph.Framebuffer is
+   procedure Clear (FB : in out Framebuffer);
+   procedure Draw_Pixel (FB : in out Framebuffer; X, Y : Coordinate; C : Pixel);
+   function Internal_Compute_Index (FB : Framebuffer; X, Y : Coordinate) return Natural; --  Should be private.
+end Glyph.Framebuffer;
+```
+
+### Information hiding
+
+Users must not depend on internal types, constants, or subprograms. The private part of a package specification must be considered internal and subject to change without notice.
+
+### Backward compatibility
+
+Public APIs must maintain backward compatibility within a major version. Changes that break backward compatibility must be reserved for major version bumps (v1.x to v2.x).
+
+### Fail early, fail loud
+
+Validate all parameters at the API boundary. Use preconditions, subtype constraints, and explicit checks to catch invalid inputs as early as possible.
+
+```ada
+procedure Draw_Pixel
+  (FB : in out Framebuffer;
+   X, Y : Coordinate;
+   C : Pixel)
+   with Pre => X < FB.Width and then Y < FB.Height;
+```
+
+### Predictable defaults
+
+Where a subprogram has common usage patterns, provide sensible defaults through default parameter values.
+
+```ada
+procedure Draw_Rectangle
+  (FB     : in out Framebuffer;
+   X, Y   : Coordinate;
+   W, H   : Positive;
+   C      : Pixel;
+   Filled : Boolean := False);
+```
+
+---
+
+## API design conventions
+
+### Parameter ordering
+
+Follow a consistent left-to-right ordering:
+
+1. The primary object being operated on (e.g., `Buffer`).
+2. Positional parameters (coordinates, dimensions).
+3. Styling parameters (colour, line width).
+4. Behavioural flags (booleans, enumeration options).
+5. Default parameters at the end.
+
+```ada
+procedure Draw_Line
+  (Buffer     : in out Framebuffer;
+   X1, Y1     : Coordinate;  -- Start position
+   X2, Y2     : Coordinate;  -- End position
+   Color      : Pixel;       -- Style
+   Line_Width : Width := 1); -- Optional style
+```
+
+### Subprogram length
+
+Subprograms should do one thing. If a subprogram is longer than 30 lines, consider splitting it.
+
+### Function vs procedure
+
+- Use a function when the operation computes a value without side effects on parameters.
+- Use a procedure when the operation primarily modifies state.
+
+```ada
+function Get_Pixel (FB : Framebuffer; X, Y : Coordinate) return Pixel;
+procedure Draw_Pixel (FB : in out Framebuffer; X, Y : Coordinate; C : Pixel);
+```
+
+### Overloading
+
+Overloading should be used sparingly and only when the parameter types make the intended subprogram unambiguous. Prefer distinct names when overloading might confuse users.
+
+```ada
+--  Acceptable: same operation, different input types.
+procedure Draw_Pixel (FB : in out Framebuffer; X, Y : Coordinate; C : Mono_Pixel);
+procedure Draw_Pixel (FB : in out Framebuffer; X, Y : Coordinate; C : RGB565_Pixel);
+
+--  Prefer distinct names when operations differ.
+--  Good:
+procedure Draw_Line (FB : in out Framebuffer; X1, Y1, X2, Y2 : Coordinate; C : Pixel);
+procedure Draw_Horizontal_Line (FB : in out Framebuffer; X, Y, Length : Coordinate; C : Pixel);
+
+--  Bad: Confusing overloading.
+procedure Draw_Line (FB : in out Framebuffer; X1, Y1, X2, Y2 : Coordinate; C : Pixel);
+procedure Draw_Line (FB : in out Framebuffer; X, Y, Length : Coordinate; C : Pixel; Horizontal : Boolean);
+```
+
+### Subprogram documentation
+
+Every public subprogram must be documented:
+
+```ada
+--  Draw a line between two points.
+--  FB     - The framebuffer to draw on.
+--  X1, Y1 - Starting pixel coordinates.
+--  X2, Y2 - Ending pixel coordinates.
+--  Color  - The pixel colour value.
+--  Raises Constraint_Error if any coordinate is out of bounds.
+procedure Draw_Line
+  (FB    : in out Framebuffer;
+   X1, Y1 : Coordinate;
+   X2, Y2 : Coordinate;
+   Color  : Pixel);
+```
+
+### Deprecation policy
+
+1. Mark deprecated subprograms with `pragma Deprecated`.
+2. Document the replacement in a comment.
+3. Maintain backward compatibility for one major version cycle.
+4. Remove deprecated subprograms at the next major version release.
+
+```ada
+pragma Deprecated (Draw_Dashed_Line, "Use Draw_Line with Line_Style => Dashed");
+procedure Draw_Dashed_Line (FB : in out Framebuffer; X1, Y1, X2, Y2 : Coordinate; C : Pixel);
+```
+
+---
+
 ## Package hierarchy design
 
 ```
@@ -97,23 +245,7 @@ Glyph                                 (top-level, public API)
     └── Glyph.HAL.Timers              (timer abstraction)
 ```
 
-## Naming conventions
-
-See [CODING_STANDARD.md](CODING_STANDARD.md) and [STYLE_GUIDE.md](STYLE_GUIDE.md) for detailed naming rules. Key conventions:
-
-| Element | Convention | Example |
-|---------|------------|---------|
-| Package | Hierarchical, capitalized | `Glyph.Framebuffer.Mono` |
-| Type | Descriptive, PascalCase | `Pixel_Format`, `Display_Driver` |
-| Subprogram | Verb phrases, snake_case | `Draw_Line`, `Fill_Rectangle` |
-| Constant | UPPER_SNAKE_CASE | `MAX_DISPLAY_WIDTH` |
-| Generic parameter | Descriptive, leading `T_` for types | `T_Pixel_Type`, `Width`, `Height` |
-
----
-
 ## Embedded constraints
-
-Glyph is designed for MCU-class devices with limited resources:
 
 | Constraint | Target |
 |------------|--------|
@@ -123,8 +255,6 @@ Glyph is designed for MCU-class devices with limited resources:
 | CPU | No FPU required |
 | Clock speed | Down to 48 MHz |
 | Display resolution | Up to 1024 x 1024 |
-
----
 
 ## Design trade-offs
 
@@ -142,16 +272,14 @@ Glyph is designed for MCU-class devices with limited resources:
 
 ### Interface inheritance vs. generic packages for display drivers
 
-**Decision**: Tagged type interface (Ada's object-oriented features) for display drivers; generic packages for framebuffers.
+**Decision**: Tagged type interface for display drivers; generic packages for framebuffers.
 
-**Rationale**: Display drivers benefit from polymorphic dispatch (e.g., iterating over a list of drivers). Framebuffers benefit from compile-time specialization with no dispatch overhead. Using the right mechanism for each layer maximizes both flexibility and performance.
-
----
+**Rationale**: Display drivers benefit from polymorphic dispatch (e.g., iterating over a list of drivers). Framebuffers benefit from compile-time specialization with no dispatch overhead.
 
 ## Future design considerations
 
-- Support for partial framebuffer updates (dirty rectangle tracking) to reduce I2C/SPI traffic.
-- Support for double-buffering with page flipping for tear-free animation.
+- Partial framebuffer updates (dirty rectangle tracking) to reduce I2C/SPI traffic.
+- Double-buffering with page flipping for tear-free animation.
 - Configurable color depth per framebuffer region.
 - Hardware acceleration interface (DMA, hardware SPI).
 - RTOS integration hooks for thread-safe frame updates.
