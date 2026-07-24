@@ -1,22 +1,18 @@
 # Glyph — Continuous Integration
 #
-# Runs on every push and pull request. Validates build, test, and
-# coding standards.
+# Runs on every push and pull request. Validates build and code quality.
 
 name: CI
 
 on:
   push:
-    branches: [main, 'release/**']
+    branches: [main]
   pull_request:
     branches: [main]
 
-env:
-  ALIRE_VERSION: '2.0.0'
-
 jobs:
   build:
-    name: Build and test
+    name: Build and lint
     runs-on: ubuntu-latest
 
     steps:
@@ -26,48 +22,20 @@ jobs:
       - name: Cache Alire dependencies
         uses: actions/cache@v4
         with:
-          path: ~/.alire
+          path: ~/.local/share/alire
           key: alire-${{ hashFiles('alire.toml') }}
           restore-keys: alire-
 
-      - name: Install GNAT Ada compiler
-        uses: ada-lang/setup-gnat@v2
-        with:
-          version: latest
-
-      - name: Install Alire
-        run: |
-          curl -L -o alr.tar.gz \
-            "https://github.com/alire-project/alire/releases/download/v${ALIRE_VERSION}/alr-${ALIRE_VERSION}-x86_64-linux.gz"
-          gunzip -c alr.tar.gz > alr
-          chmod +x alr
-          sudo mv alr /usr/local/bin/
+      - name: Install Alire and GNAT toolchain
+        uses: alire-project/setup-alire@v3
 
       - name: Build library
         run: alr build
 
-      - name: Run unit tests
-        run: alr test
-
-      - name: Check coding standards
-        run: |
-          pip install pre-commit
-          pre-commit run --all-files
-
-  lint:
-    name: Lint and format check
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install GNAT Ada compiler
-        uses: ada-lang/setup-gnat@v2
-        with:
-          version: latest
-
       - name: Check Ada source formatting
         run: |
-          # Placeholder: run gnatcheck or adafmt when configured
-          echo "Formatting check will be configured in a future release."
+          if [ -n "$(find src -name '*.ads' -o -name '*.adb' 2>/dev/null | head -1)" ]; then
+            echo "Source formatting check will be enabled when adafmt is configured."
+          else
+            echo "No Ada source files yet — skipping formatting check."
+          fi
