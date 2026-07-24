@@ -147,6 +147,8 @@ glyph/
 | [DESIGN.md](DESIGN.md) | Design philosophy, engineering principles, API design guidelines |
 | [CODING_STANDARD.md](CODING_STANDARD.md) | Ada coding conventions and formatting rules |
 | [ROADMAP.md](ROADMAP.md) | Milestones and development plan |
+| [CHANGELOG.md](CHANGELOG.md) | Version history and release notes |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community standards and expectations |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Development workflow, testing, and release process |
 | [SECURITY.md](SECURITY.md) | Security policies and vulnerability reporting |
 | [GOVERNANCE.md](GOVERNANCE.md) | Project governance and maintainers |

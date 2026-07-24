@@ -22,7 +22,7 @@
 ## Building and running
 
 ```sh
-cd examples/sensor-dashboard
+cd examples/04-dashboard
 alr build
 # Flash the resulting binary to the target board.
 ```
