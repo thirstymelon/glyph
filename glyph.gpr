@@ -36,7 +36,7 @@ library project Glyph is
                "-g",            --  Debug symbols
                "-gnato",        --  Overflow checks enabled
                "-gnata",        --  Assertion checks enabled
-               "-gnateE");      --  Extra strictness
+               "-gnatwe");      --  Treat warnings as errors
 
          when others =>
             for Default_Switches ("ada") use
