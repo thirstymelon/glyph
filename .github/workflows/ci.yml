@@ -27,7 +27,7 @@ jobs:
           restore-keys: alire-
 
       - name: Install Alire and GNAT toolchain
-        uses: alire-project/setup-alire@v3
+        uses: alire-project/setup-alire@v2
 
       - name: Build library
         run: alr build
