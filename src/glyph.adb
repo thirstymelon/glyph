@@ -10,9 +10,4 @@ package body Glyph is
       null;
    end Shutdown;
 
-   function Version return String is
-   begin
-      return Glyph.Current_Version;
-   end Version;
-
 end Glyph;

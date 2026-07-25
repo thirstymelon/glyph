@@ -20,6 +20,5 @@ package Glyph is
 
    procedure Initialize;
    procedure Shutdown;
-   function Version return String;
 
 end Glyph;

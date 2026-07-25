@@ -1,15 +1,15 @@
 # Glyph
 
-Glyph is a lightweight embedded graphics framework for Ada.
+Glyph is a lightweight embedded graphics framework written in Ada for bare-metal and embedded systems.
 
-It provides a hardware-independent graphics API for drawing on embedded displays while keeping display drivers and hardware-specific code separate from rendering logic.
+It provides a hardware-independent graphics API for drawing on embedded displays while keeping rendering logic, display drivers, and hardware-specific code cleanly separated.
 
-The initial development target is the SSD1306 OLED on the RP2040 (Vicharak Shrike-Lite), with support for additional display controllers and microcontrollers planned in future releases.
+The initial development target is the SSD1306 OLED display on the RP2040 (Vicharak Shrike-Lite). The architecture is designed to support additional display controllers, transport interfaces, and microcontrollers in future releases.
 
 ## Features
 
-- Ada 2022
-- Layered architecture
+- Written in Ada 2022
+- Layered and modular architecture
 - Hardware-independent graphics API
 - Framebuffer-based rendering
 - Display driver abstraction
@@ -17,17 +17,32 @@ The initial development target is the SSD1306 OLED on the RP2040 (Vicharak Shrik
 
 ## Status
 
-Glyph is currently under active development.
+Glyph is under active development.
 
-The project is in its early stages, with the core architecture and APIs being implemented.
+The project is currently focused on establishing the core architecture, graphics framework, and display abstractions before implementing rendering primitives and display drivers.
 
 ## Project Structure
 
 ```text
 glyph/
 ├── config/
+│   ├── glyph_config.ads
+│   ├── glyph_config.gpr
+│   └── glyph_config.h
 ├── src/
+│   ├── canvas/
+│   │   ├── glyph-canvas.ads
+│   │   └── glyph-canvas.adb
+│   ├── display/
+│   │   └── glyph-display.ads
+│   ├── pixel_formats/
+│   │   └── glyph-pixel_formats.ads
+│   ├── glyph.ads
+│   ├── glyph.adb
+│   └── glyph-types.ads
 ├── tests/
+├── tools/
+├── .gitignore
 ├── alire.toml
 ├── glyph.gpr
 └── README.md

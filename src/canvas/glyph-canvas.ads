@@ -8,27 +8,22 @@
 --  transfers the rendered image to the associated display.
 ------------------------------------------------------------------------------
 
-with Glyph.Types;
+with Glyph.Display;
 
 package Glyph.Canvas is
 
-   type Canvas
-     (Width  : Glyph.Types.Dimension;
-      Height : Glyph.Types.Dimension)
-   is
-     tagged limited private;
+   type Canvas is tagged limited private;
 
-   -- procedure Initialize (Self : in out Canvas);
+   procedure Attach
+     (Self    : in out Canvas;
+      Display : not null access Glyph.Display.Display'Class);
    procedure Clear (Self : in out Canvas);
    procedure Flush (Self : in out Canvas);
 
 private
 
-   type Canvas
-     (Width  : Glyph.Types.Dimension;
-      Height : Glyph.Types.Dimension)
-   is tagged limited record
-      null;
+   type Canvas is tagged limited record
+      Display : access Glyph.Display.Display'Class := null;
    end record;
 
 end Glyph.Canvas;
