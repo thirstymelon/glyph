@@ -15,5 +15,11 @@
 ------------------------------------------------------------------------------
 
 package Glyph is
-   pragma Pure;
+
+   Current_Version : constant String := "0.1.0-dev";
+
+   procedure Initialize;
+   procedure Shutdown;
+   function Version return String;
+
 end Glyph;

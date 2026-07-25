@@ -1,32 +1,4 @@
-# Glyph — Embedded Graphics Framework for Ada
-# Alire project manifest
-#
-# This file defines the Glyph crate for the Alire package manager.
-# It specifies dependencies, build configuration, and metadata.
-
 name = "glyph"
-description = "Embedded graphics framework for Ada, targeting microcontrollers with a layered architecture, framebuffer rendering, and display driver abstraction."
 version = "0.1.0"
-licenses = ["Apache-2.0"]
-authors = ["Glyph Contributors"]
-maintainers = ["maintainers@glyph-ada.io"]
-maintainers-logins = ["glyph-team"]
-
-[[depends-on]]
-# No runtime dependencies beyond the Ada standard library.
-#
-# The following are optional and will be added when specific
-# backends or features require them:
-#
-#   - embedded_hal                   (when generic HAL features are added)
-#   - hal                            (when hardware abstraction is needed)
-#   - memory_pool                    (when fixed-pool allocator is used)
-
-[build-profiles]
-default = "release"
-development = "debug"
-
-[origin]
-# Placeholder — will be updated when the crate is published.
-commit = "0.1.0"
-url = "https://github.com/glyph-ada/glyph.git"
+description = "Glyph graphics library"
+licenses = "Apache-2.0"
