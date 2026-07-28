@@ -14,16 +14,15 @@ package Glyph.Canvas is
 
    type Canvas is tagged limited private;
 
-   procedure Attach
-     (Self    : in out Canvas;
-      Display : not null access Glyph.Display.Display'Class);
+   procedure Create
+     (Self : in out Canvas; Display : not null access Glyph.Display.Display);
    procedure Clear (Self : in out Canvas);
    procedure Flush (Self : in out Canvas);
 
 private
 
    type Canvas is tagged limited record
-      Display : access Glyph.Display.Display'Class := null;
+      Display : access Glyph.Display.Display := null;
    end record;
 
 end Glyph.Canvas;

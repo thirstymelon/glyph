@@ -11,6 +11,7 @@ package Glyph.Types is
 
    subtype Coordinate is Integer;
    subtype Dimension is Positive;
+   subtype Pixel_Index is Natural;
 
    type Rotation is (Rotate_0, Rotate_90, Rotate_180, Rotate_270);
 
