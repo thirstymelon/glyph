@@ -1,65 +1,59 @@
-# Glyph Architecture
+# ✦ Glyph Architecture
 
-**Version:** 1.0 (Architecture Freeze)
-**Status:** Active Design Document
+**Version:** 1.1
+
+**Status:** Active
 
 ---
 
-# Overview
+## ✦ Overview
 
-Glyph is a lightweight, portable graphics framework for Ada designed specifically for embedded systems.
+Glyph is a portable graphics framework for Ada designed specifically for bare-metal and embedded systems.
 
-Its primary goals are:
+Its architecture emphasizes:
 
 - Hardware independence
-- Predictable memory usage
-- Static allocation only
-- Clean package boundaries
-- Long-term maintainability
+- Static memory allocation
+- Deterministic behavior
 - Stable public APIs
+- Strict package responsibilities
+- Long-term maintainability
 
-Every design decision in Glyph should follow the architecture described in this document.
-
-If a future implementation conflicts with these principles, the implementation should be reconsidered rather than modifying the architecture.
+Every implementation should follow the architecture described in this document.
 
 ---
 
-# Core Philosophy
+## ✦ Core Philosophy
 
 Glyph follows one fundamental rule:
 
 > **Every package has one primary responsibility.**
 
-A package may expose multiple operations, but every operation must support the same responsibility.
-
-Packages should never perform work that belongs to another layer.
+Packages collaborate through clearly defined interfaces while remaining independent from one another.
 
 ---
 
-# Design Principles
+## ✦ Design Principles
 
-## 1. Single Responsibility
+### ✦ Single Responsibility
 
-Each package exists for one reason only.
+Every package exists for exactly one reason.
 
 Examples:
 
-- Canvas coordinates graphics rendering.
+- Canvas coordinates rendering.
 - Framebuffer stores pixels.
 - Display represents a display device.
+- Display_Profiles define immutable display descriptors.
 - Controllers implement controller-specific behavior.
 - Transport transfers bytes.
-- BSP/HAL accesses hardware peripherals.
+- BSP/HAL communicates with hardware.
 
 ---
 
-## 2. Composition Over Inheritance
+### ✦ Composition Over Inheritance
 
-Glyph prefers composition whenever possible.
-
-Instead of creating complex inheritance hierarchies, objects own or reference other objects.
-
-Example:
+Glyph favors composition instead of inheritance.
 
 ```text
 Canvas
@@ -67,88 +61,60 @@ Canvas
 └── references Display
 ```
 
-rather than
-
-```text
-Canvas
-    ▲
-Framebuffer
-```
+Objects collaborate instead of forming deep inheritance hierarchies.
 
 ---
 
-## 3. Make Invalid States Impossible
-
-Glyph should prevent invalid object states whenever practical.
-
-Examples:
-
-- A framebuffer cannot exist with inconsistent dimensions.
-- Display descriptors are immutable.
-- Internal implementation details remain inaccessible to applications.
-
----
-
-## 4. Immutable Configuration
+### ✦ Immutable Configuration
 
 Static configuration never changes at runtime.
 
-Display descriptors are immutable constants.
+Display descriptors are immutable compile-time constants.
 
-Display objects may contain runtime state but never modify descriptor information.
-
----
-
-## 5. Public API Stability
-
-Public APIs should remain stable as Glyph evolves.
-
-Adding support for:
-
-- new displays
-- new controllers
-- new transports
-- new pixel formats
-
-should not require applications to change existing code.
+Display objects contain runtime state while referencing immutable descriptors.
 
 ---
 
-## 6. No Dynamic Memory Allocation
+### ✦ Stable Public API
 
-Glyph never allocates memory dynamically.
+Applications should continue compiling as Glyph gains:
 
-- No heap allocation
-- No garbage collection
-- No ownership ambiguity
+- New display controllers
+- New transport layers
+- New pixel formats
+- New displays
+
+---
+
+### ✦ Static Memory Only
+
+Glyph never performs dynamic memory allocation.
 
 Memory is either:
 
-- statically allocated
-- stack allocated
+- Statically allocated
+- Stack allocated
 
-This guarantees deterministic memory usage and predictable behavior.
+This guarantees deterministic behavior for embedded systems.
 
 ---
 
-## 7. Hardware Independence
+### ✦ Hardware Independence
 
-Graphics code must remain completely independent of hardware.
+Graphics algorithms never depend on hardware.
 
-Drawing algorithms must never know:
+Drawing code has no knowledge of:
 
-- I²C
-- SPI
-- DMA
 - GPIO
+- SPI
+- I²C
+- DMA
 
-Likewise, hardware drivers must never know graphics algorithms.
+Likewise, transport layers know nothing about graphics algorithms.
 
 ---
 
-# Layered Architecture
-
-Glyph follows a strict layered architecture.
+## ✦ Layered Architecture
 
 ```text
 Application
@@ -184,215 +150,169 @@ Application
 +-------------+
 ```
 
-Each layer communicates only with adjacent layers.
-
-No layer may bypass another layer.
+Each layer communicates only with the layer directly below it.
 
 ---
 
-# Package Responsibilities
+## ✦ Package Responsibilities
 
-## Glyph.Canvas
+### ✦ Glyph
 
-### Responsibility
+The root package of the framework.
 
-Coordinates graphics rendering.
+Responsible for:
 
-### Owns
-
-- One framebuffer
-
-### References
-
-- One display
-
-### Performs
-
-- Drawing operations
-- Clipping
-- Rendering coordination
-- Flush requests
-
-### Never Performs
-
-- Hardware communication
-- Pixel storage
-- Display controller logic
-- Transport operations
+- Framework initialization
+- Framework shutdown
 
 ---
 
-## Glyph.Framebuffer *(Private)*
+### ✦ Glyph.Types
 
-### Responsibility
+Defines fundamental types shared throughout Glyph.
 
-Stores pixels.
+Examples:
 
-### Performs
+- Coordinate
+- Dimension
+- Rotation
+- Pixel_Index
+
+---
+
+### ✦ Glyph.Pixel_Formats
+
+Defines framebuffer pixel formats.
+
+Initially:
+
+- `Monochrome_1bpp`
+
+Additional formats can be introduced without changing the public graphics API.
+
+---
+
+### ✦ Glyph.Canvas
+
+Coordinates rendering.
+
+Each canvas:
+
+- Owns exactly one framebuffer
+- References exactly one display
+
+Canvas never communicates directly with hardware.
+
+---
+
+### ✦ Glyph.Framebuffer *(Private)*
+
+Responsible only for storing pixel data.
+
+Provides:
 
 - Pixel storage
 - Pixel retrieval
 - Memory clearing
 
-### Never Performs
-
-- Drawing algorithms
-- Display communication
-- Transport operations
-
-The framebuffer is an internal implementation detail and is never exposed publicly.
+The framebuffer is never exposed publicly.
 
 ---
 
-## Glyph.Display
-
-### Responsibility
+### ✦ Glyph.Display
 
 Represents a physical display.
 
-### Performs
+Responsible for:
 
 - Display initialization
-- Display state management
+- Runtime state
 - Display capability queries
 - Flush requests
+- Power management
 
-### Never Performs
-
-- Drawing algorithms
-- Pixel storage
-- Controller algorithms
-- Transport operations
-
-Applications interact with displays only through this package.
-
-Glyph exposes exactly **one** public display type.
+Applications interact only with this package.
 
 ---
 
-## Glyph.Displays
-
-### Responsibility
+### ✦ Glyph.Display_Profiles
 
 Defines immutable display descriptors.
-
-Each supported display is represented by one predefined descriptor.
 
 Examples:
 
 - SSD1306_128_64
 - SSD1306_128_32
-- SH1106_128_64
-- ILI9341_320_240
 
-Descriptors are:
+Each descriptor defines:
 
-- immutable
-- predefined
-- compile-time constants
+- Width
+- Height
+- Pixel format
+- Controller type
+- Transport type
 
-They are the single source of truth describing supported displays.
+Descriptors are the single source of truth describing supported displays.
 
 ---
 
-## Glyph.Controllers *(Private)*
+### ✦ Glyph.Controllers *(Private)*
 
-### Responsibility
-
-Implements controller-specific algorithms.
+Implements controller-specific behavior.
 
 Examples:
 
 - SSD1306 initialization
-- SSD1306 framebuffer conversion
-- SH1106 page mapping
-- ST7789 command generation
+- Framebuffer conversion
+- Command generation
+- Flush implementation
 
 Controllers never define display properties.
 
-Controllers are private implementation details.
-
-Applications never access controllers directly.
-
 ---
 
-## Glyph.Transport *(Private)*
+### ✦ Glyph.Transport *(Private)*
 
-### Responsibility
-
-Transfers bytes between Glyph and hardware.
+Responsible only for transferring bytes.
 
 Examples:
 
 - I²C
 - SPI
-- Parallel
 
-Transport never performs graphics operations.
+Transport layers never contain graphics logic.
 
 ---
 
-## BSP / HAL
-
-### Responsibility
+### ✦ BSP / HAL
 
 Provides direct hardware access.
 
 Examples:
 
 - GPIO
-- I²C peripheral
 - SPI peripheral
+- I²C peripheral
 - DMA
 
-This layer knows nothing about displays or graphics.
+This layer knows nothing about graphics.
 
 ---
 
-# Display Descriptors
+## ✦ Object Relationships
 
-Every supported display is represented by one immutable descriptor.
+```text
+Canvas
+├── owns Framebuffer
+└── references Display
 
-A descriptor contains immutable properties describing a supported display.
-
-Examples include:
-
-- Width
-- Height
-- Pixel Format
-- Controller Type
-- Transport Type
-- Controller-specific initialization data
-- Default hardware characteristics
-- Static capabilities
-
-Descriptors contain only immutable data.
-
-Descriptors never contain executable logic.
+Display
+└── references immutable Display Descriptor
+```
 
 ---
 
-# Controllers
-
-Controllers implement behavior.
-
-Controllers may:
-
-- Initialize hardware
-- Encode controller commands
-- Convert framebuffer layouts
-- Flush pixel data
-- Power displays on and off
-
-Controllers never define display properties.
-
-Those belong exclusively to display descriptors.
-
----
-
-# Display Lifecycle
-
-Typical application flow:
+## ✦ Display Lifecycle
 
 ```text
 Create Display
@@ -403,7 +323,7 @@ Initialize Display
 
 ↓
 
-Attach Canvas
+Create Canvas
 
 ↓
 
@@ -418,112 +338,36 @@ Flush
 Repeat
 ```
 
-Example:
-
-```ada
-OLED : Display;
-
-OLED.Initialize (SSD1306_128_64);
-
-Canvas.Attach (OLED);
-
-Canvas.Clear;
-Canvas.Draw_Line (...);
-Canvas.Draw_Text (...);
-Canvas.Flush;
-```
-
 ---
 
-# Canvas Ownership
-
-Each canvas owns:
-
-- Exactly one framebuffer
-
-Each canvas references:
-
-- Exactly one display
-
-A canvas cannot be attached to multiple displays.
-
-Applications requiring multiple displays should create multiple canvases.
-
-Example:
-
-```ada
-OLED : Display;
-LCD  : Display;
-
-Canvas1.Attach (OLED);
-Canvas2.Attach (LCD);
-```
-
----
-
-# Framebuffer Ownership
-
-Applications never access framebuffers directly.
-
-Framebuffers exist solely to support canvas rendering.
-
-This allows Glyph to freely change framebuffer implementation without breaking application code.
-
----
-
-# Rotation
-
-Display rotation belongs to the display layer.
-
-The framebuffer always stores graphics in its natural orientation.
-
-Rotation is applied only while presenting pixels to the physical display.
-
----
-
-# Coordinates
-
-Glyph uses the conventional graphics coordinate system.
+## ✦ Coordinate System
 
 ```text
 (0,0)
- ┌──────────────────► X
- │
+ ┌────────────────► X
  │
  │
  ▼
  Y
 ```
 
-Origin:
+- Origin: Top-left
+- Positive X: Right
+- Positive Y: Down
 
-- Top-left corner
-
-Positive X:
-
-- Right
-
-Positive Y:
-
-- Down
-
-Coordinates outside the visible area are valid.
-
-Drawing operations perform clipping rather than raising exceptions.
+Drawing operations perform clipping rather than raising exceptions when coordinates fall outside the visible area.
 
 ---
 
-# Color Model
+## ✦ Color Model
 
 Glyph initially targets monochrome displays.
 
-The public graphics API is designed so future color support can be added without changing drawing function names.
-
-The API evolves through new color types rather than new drawing functions.
+Future color support will extend the existing API through additional pixel formats and color types instead of introducing separate drawing APIs.
 
 ---
 
-# Multiple Displays
+## ✦ Multiple Displays
 
 Glyph supports multiple independent displays.
 
@@ -533,44 +377,41 @@ Each display has:
 - Its own canvas
 - Its own framebuffer
 
-Displays never share framebuffers.
+Displays never share rendering state.
 
 ---
 
-# Public vs Private
+## ✦ Architecture Rules
 
-If an application never needs to call a package, it should remain private.
+Every package added to Glyph must satisfy the following:
 
-Examples of private implementation packages:
-
-- Glyph.Framebuffer
-- Glyph.Controllers
-- Glyph.Transport
-
-Keeping these packages private allows Glyph to evolve internally without breaking applications.
-
----
-
-# Architecture Rules
-
-Every new package added to Glyph must satisfy the following checklist:
-
-- Has exactly one primary responsibility.
-- Does not duplicate information owned elsewhere.
-- Keeps immutable data separate from executable logic.
-- Does not expose internal implementation details.
-- Does not allocate memory dynamically.
-- Does not bypass architecture layers.
-- Can evolve without breaking existing applications.
-
-If a package violates any of these rules, its design should be reconsidered before implementation.
+- One primary responsibility
+- No duplicated ownership of information
+- Immutable configuration separated from runtime state
+- No dynamic memory allocation
+- No layer bypassing
+- Stable public interfaces
+- Internal implementation remains private
 
 ---
 
-# Architecture Freeze
+## ✦ Current Implementation Status
 
-This document defines the architectural foundation of Glyph.
+### Completed
 
-Future features should extend this architecture rather than replace it.
+- Core package structure
+- Public API
+- Display abstraction
+- Display descriptors
+- Canvas lifecycle
+- Internal package layout
 
-Changes to this document should be rare and only made when they simplify the architecture without violating its core principles.
+### Next Milestones
+
+1. Framebuffer implementation
+2. Drawing primitives
+3. Controller implementations
+4. Transport implementations
+5. SSD1306 support
+6. Font rendering
+7. Additional display support
