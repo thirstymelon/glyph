@@ -18,7 +18,4 @@ package Glyph is
 
    Current_Version : constant String := "0.1.0-dev";
 
-   procedure Initialize;
-   procedure Shutdown;
-
 end Glyph;

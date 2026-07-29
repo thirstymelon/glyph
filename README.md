@@ -2,57 +2,58 @@
 
 Glyph is a lightweight embedded graphics framework written in Ada for bare-metal and embedded systems.
 
-Glyph provides a hardware-independent graphics API for embedded displays while keeping rendering logic, display management, controller implementations, transport layers, and hardware access cleanly separated.
+The framework is designed around deterministic memory usage, static allocation, and a layered architecture that cleanly separates graphics algorithms from display controller implementations and platform-specific hardware.
 
-The framework is designed around deterministic memory usage, static allocation, and a stable public API suitable for resource-constrained embedded systems.
+Glyph is being built as a reusable graphics library rather than a board-specific display driver. Its goal is to provide a clean, portable foundation for embedded graphics while remaining independent of any BSP, HAL, SDK, or RTOS.
 
-The initial development target is the SSD1306 OLED display running on the RP2040 (Vicharak Shrike-Lite). The architecture is designed to support additional display controllers, transport interfaces, and microcontrollers in future releases.
+The initial development target is the SSD1306 OLED display on the RP2040 (Vicharak Shrike-Lite), but the architecture is intended to support additional display controllers, transport mechanisms, and microcontrollers in future releases.
 
 # ✦ A Note from the Author
->
+
 > Glyph is my first embedded graphics framework and my first experience writing display drivers from scratch. I'm building this project while learning Ada, with the goal of gaining a deep understanding of graphics programming, embedded systems, and framework design through hands-on implementation.
 >
-> I'm intentionally implementing every part of the framework myself, so I'm **not looking for direct code contributions or pull requests that implement features for me**. The learning process is the primary goal of this project.
+> I'm intentionally implementing every part of the framework myself, so I'm **not looking for direct feature implementations or pull requests that write the code for me**. The learning journey is the primary objective of this project.
 >
-> That said, I genuinely welcome feedback on the architecture, design decisions, implementation approach, Ada best practices, documentation, and overall project direction. If you have suggestions, ideas, or see a better way to solve a problem, I'd love to hear them. Thoughtful guidance and discussions are always appreciated.
+> I genuinely welcome architectural discussions, Ada best practices, design reviews, documentation improvements, bug reports, and constructive feedback. If you think something can be designed better, I'd love to hear your ideas.
 
-## ✦ Features
+## ✦ Design Goals
 
 - Written in Ada 2022
-- Hardware-independent graphics API
-- Layered and modular architecture
-- Framebuffer-based rendering
-- Immutable display descriptors
+- Portable graphics framework
+- Hardware independent
 - Static memory allocation only
-- Stable public API
+- Compile-time configuration where practical
+- Layered architecture
+- Deterministic behaviour
+- Stable public APIs
 - Designed for bare-metal embedded systems
-- Extensible architecture for future display controllers and pixel formats
 
 ## ✦ Current Status
 
-Glyph is under active development.
+Glyph is in the architectural foundation stage.
 
-The architectural foundation of the framework has been completed. The current focus is implementing the rendering engine and display drivers on top of the established architecture.
+The public package structure has been established and the framework is currently being built from the lowest layers upward.
 
 ### Completed
 
 - Core project structure
-- Public API
-- Display abstraction
-- Immutable display descriptors
-- Canvas lifecycle
-- Internal architecture layers
+- Fundamental types
+- Pixel format definitions
+- Initial package hierarchy
+- Overall architecture
 
 ### In Progress
 
 - Framebuffer implementation
+- Canvas API
 
 ### Planned
 
 - Drawing primitives
-- Font rendering
 - SSD1306 controller
-- I²C transport
+- Fonts
+- Images
+- Widgets
 - Additional display controllers
 - Color display support
 
@@ -62,88 +63,60 @@ The architectural foundation of the framework has been completed. The current fo
 Application
       │
       ▼
-+-------------+
-|   Canvas    |
-+------+------+
-       │
-       ▼
-+-------------+
-| Framebuffer |   (Private)
-+------+------+
-       │
-       ▼
-+-------------+
-|   Display   |
-+------+------+
-       │
-       ▼
-+-------------+
-| Controllers |   (Private)
-+------+------+
-       │
-       ▼
-+-------------+
-| Transport   |   (Private)
-+------+------+
-       │
-       ▼
-+-------------+
-|   BSP/HAL   |
-+-------------+
++---------------+
+|  Controller   |
++-------+-------+
+        │
+        ▼
++---------------+
+|    Canvas     |
++-------+-------+
+        │
+        ▼
++---------------+
+| Framebuffer   |
++---------------+
 ```
+
+The graphics framework owns:
+
+- Drawing algorithms
+- Framebuffers
+- Display controller implementations
+
+Platform-specific hardware access is intentionally kept outside of Glyph.
 
 ## ✦ Project Structure
 
 ```text
 glyph/
 ├── config/
-│   ├── glyph_config.ads
-│   ├── glyph_config.gpr
-│   └── glyph_config.h
 ├── src/
 │   ├── canvas/
-│   │   ├── glyph-canvas.ads
-│   │   └── glyph-canvas.adb
 │   ├── controllers/
-│   │   ├── glyph-controllers.ads
-│   │   └── glyph-controllers.adb
-│   ├── display/
-│   │   ├── glyph-display.ads
-│   │   ├── glyph-display.adb
-│   │   ├── glyph-display_profiles.ads
-│   │   └── glyph-display_profiles.adb
 │   ├── framebuffer/
-│   │   ├── glyph-framebuffer.ads
-│   │   └── glyph-framebuffer.adb
 │   ├── pixel_formats/
-│   │   └── glyph-pixel_formats.ads
-│   ├── transport/
-│   │   ├── glyph-transport.ads
-│   │   └── glyph-transport.adb
 │   ├── glyph.ads
-│   ├── glyph.adb
 │   └── glyph-types.ads
-├── tests/
-├── tools/
-├── .gitignore
 ├── ARCHITECTURE.md
+├── README.md
 ├── alire.toml
-├── glyph.gpr
-└── README.md
+└── glyph.gpr
 ```
 
 ## ✦ Roadmap
 
-- ✅ Core architecture
-- ✅ Public API
-- ✅ Display abstraction
-- ✅ Display descriptors
+- ✅ Core project structure
+- ✅ Architecture
+- ✅ Package hierarchy
 - ⏳ Framebuffer
+- ⏳ Canvas
 - ⏳ Drawing primitives
-- ⏳ Font rendering
 - ⏳ SSD1306 controller
-- ⏳ I²C transport
-- ⏳ Additional display support
+- ⏳ Font rendering
+- ⏳ Image rendering
+- ⏳ Widgets
+- ⏳ Additional display controllers
 - ⏳ Color display support
 
 ## ✦ License

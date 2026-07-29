@@ -1,346 +1,221 @@
 # ✦ Glyph Architecture
 
-**Version:** 1.1
+**Version:** 2.0
 
 **Status:** Active
 
 ---
 
-## ✦ Overview
+# ✦ Overview
 
-Glyph is a portable graphics framework for Ada designed specifically for bare-metal and embedded systems.
+Glyph is a portable embedded graphics framework written in Ada.
 
-Its architecture emphasizes:
+The framework is designed around three fundamental ideas:
 
-- Hardware independence
-- Static memory allocation
-- Deterministic behavior
-- Stable public APIs
-- Strict package responsibilities
-- Long-term maintainability
+- Graphics algorithms should be hardware independent.
+- Display controller implementations belong inside Glyph.
+- Platform-specific hardware access belongs outside Glyph.
 
-Every implementation should follow the architecture described in this document.
+The architecture intentionally avoids dynamic memory allocation, runtime configuration where unnecessary, and dependencies on BSPs, HALs, SDKs, or RTOSes.
 
 ---
 
-## ✦ Core Philosophy
+# ✦ Core Philosophy
 
-Glyph follows one fundamental rule:
+Glyph follows one simple rule:
 
-> **Every package has one primary responsibility.**
+> **Every package owns one responsibility and only one responsibility.**
 
-Packages collaborate through clearly defined interfaces while remaining independent from one another.
-
----
-
-## ✦ Design Principles
-
-### ✦ Single Responsibility
-
-Every package exists for exactly one reason.
-
-Examples:
-
-- Canvas coordinates rendering.
-- Framebuffer stores pixels.
-- Display represents a display device.
-- Display_Profiles define immutable display descriptors.
-- Controllers implement controller-specific behavior.
-- Transport transfers bytes.
-- BSP/HAL communicates with hardware.
+Responsibilities are never duplicated.
 
 ---
 
-### ✦ Composition Over Inheritance
+# ✦ Design Principles
 
-Glyph favors composition instead of inheritance.
+## ✦ Hardware Independence
 
-```text
-Canvas
-├── owns Framebuffer
-└── references Display
-```
+Glyph never depends directly on:
 
-Objects collaborate instead of forming deep inheritance hierarchies.
+- BSPs
+- HALs
+- SDKs
+- RTOSes
 
----
-
-### ✦ Immutable Configuration
-
-Static configuration never changes at runtime.
-
-Display descriptors are immutable compile-time constants.
-
-Display objects contain runtime state while referencing immutable descriptors.
+Graphics code should be reusable on any embedded platform.
 
 ---
 
-### ✦ Stable Public API
+## ✦ Static Memory
 
-Applications should continue compiling as Glyph gains:
-
-- New display controllers
-- New transport layers
-- New pixel formats
-- New displays
-
----
-
-### ✦ Static Memory Only
-
-Glyph never performs dynamic memory allocation.
+Glyph performs no dynamic memory allocation.
 
 Memory is either:
 
-- Statically allocated
+- Static
 - Stack allocated
 
-This guarantees deterministic behavior for embedded systems.
+This guarantees deterministic behaviour.
 
 ---
 
-### ✦ Hardware Independence
+## ✦ Compile-Time First
 
-Graphics algorithms never depend on hardware.
+Configuration should be resolved at compile time whenever practical.
 
-Drawing code has no knowledge of:
-
-- GPIO
-- SPI
-- I²C
-- DMA
-
-Likewise, transport layers know nothing about graphics algorithms.
+Runtime configuration is avoided unless it provides a clear architectural benefit.
 
 ---
 
-## ✦ Layered Architecture
+## ✦ Layered Design
+
+Each layer communicates only with the layer immediately below it.
+
+No package should bypass intermediate layers.
+
+---
+
+## ✦ Stable Public APIs
+
+Applications should continue compiling as Glyph gains:
+
+- New controllers
+- New drawing primitives
+- New widgets
+- New pixel formats
+
+---
+
+# ✦ Layered Architecture
 
 ```text
 Application
       │
       ▼
-+-------------+
-|   Canvas    |
-+------+------+
-       │
-       ▼
-+-------------+
-| Framebuffer |   (Private)
-+------+------+
-       │
-       ▼
-+-------------+
-|   Display   |
-+------+------+
-       │
-       ▼
-+-------------+
-| Controllers |   (Private)
-+------+------+
-       │
-       ▼
-+-------------+
-| Transport   |   (Private)
-+------+------+
-       │
-       ▼
-+-------------+
-|   BSP/HAL   |
-+-------------+
++---------------+
+|  Controller   |
++-------+-------+
+        │
+        ▼
++---------------+
+|    Canvas     |
++-------+-------+
+        │
+        ▼
++---------------+
+| Framebuffer   |
++---------------+
 ```
 
-Each layer communicates only with the layer directly below it.
+The application communicates only with instantiated controller packages.
+
+Controllers own display-specific behaviour.
+
+Canvas owns drawing.
+
+Framebuffer owns pixel storage.
 
 ---
 
-## ✦ Package Responsibilities
+# ✦ Package Responsibilities
 
-### ✦ Glyph
+## ✦ Glyph
 
-The root package of the framework.
+Root package of the framework.
 
-Responsible for:
-
-- Framework initialization
-- Framework shutdown
+Currently provides only framework metadata.
 
 ---
 
-### ✦ Glyph.Types
+## ✦ Glyph.Types
 
-Defines fundamental types shared throughout Glyph.
+Defines common types shared throughout the framework.
 
 Examples:
 
 - Coordinate
 - Dimension
 - Rotation
-- Pixel_Index
 
 ---
 
-### ✦ Glyph.Pixel_Formats
+## ✦ Glyph.Pixel_Formats
 
-Defines framebuffer pixel formats.
+Defines supported framebuffer formats.
 
 Initially:
 
-- `Monochrome_1bpp`
+- Monochrome_1bpp
 
-Additional formats can be introduced without changing the public graphics API.
+Additional formats will be added without changing the graphics API.
 
 ---
 
-### ✦ Glyph.Canvas
+## ✦ Glyph.Framebuffer
 
-Coordinates rendering.
+Responsible only for pixel storage.
 
-Each canvas:
+Responsibilities include:
 
-- Owns exactly one framebuffer
-- References exactly one display
+- Pixel storage
+- Pixel access
+- Clearing memory
+
+The framebuffer contains no drawing algorithms.
+
+---
+
+## ✦ Glyph.Canvas
+
+Provides drawing operations.
+
+Responsibilities include:
+
+- Lines
+- Rectangles
+- Circles
+- Text
+- Image rendering
+
+Canvas manipulates a framebuffer.
 
 Canvas never communicates directly with hardware.
 
 ---
 
-### ✦ Glyph.Framebuffer *(Private)*
+## ✦ Glyph.Controllers
 
-Responsible only for storing pixel data.
-
-Provides:
-
-- Pixel storage
-- Pixel retrieval
-- Memory clearing
-
-The framebuffer is never exposed publicly.
-
----
-
-### ✦ Glyph.Display
-
-Represents a physical display.
-
-Responsible for:
-
-- Display initialization
-- Runtime state
-- Display capability queries
-- Flush requests
-- Power management
-
-Applications interact only with this package.
-
----
-
-### ✦ Glyph.Display_Profiles
-
-Defines immutable display descriptors.
+Contains display controller implementations.
 
 Examples:
 
-- SSD1306_128_64
-- SSD1306_128_32
+- SSD1306
+- SH1106
+- ST7789
+- ILI9341
 
-Each descriptor defines:
+Each controller owns:
 
-- Width
-- Height
-- Pixel format
-- Controller type
-- Transport type
-
-Descriptors are the single source of truth describing supported displays.
-
----
-
-### ✦ Glyph.Controllers *(Private)*
-
-Implements controller-specific behavior.
-
-Examples:
-
-- SSD1306 initialization
-- Framebuffer conversion
+- Initialization sequences
 - Command generation
-- Flush implementation
+- Framebuffer conversion
+- Display refresh logic
 
-Controllers never define display properties.
-
----
-
-### ✦ Glyph.Transport *(Private)*
-
-Responsible only for transferring bytes.
-
-Examples:
-
-- I²C
-- SPI
-
-Transport layers never contain graphics logic.
+Controllers do **not** own graphics algorithms.
 
 ---
 
-### ✦ BSP / HAL
+# ✦ Ownership
 
-Provides direct hardware access.
-
-Examples:
-
-- GPIO
-- SPI peripheral
-- I²C peripheral
-- DMA
-
-This layer knows nothing about graphics.
+| Component | Owner |
+|-----------|-------|
+| Drawing algorithms | Canvas |
+| Pixel storage | Framebuffer |
+| Display protocol | Controller |
+| Hardware access | Application / BSP |
 
 ---
 
-## ✦ Object Relationships
-
-```text
-Canvas
-├── owns Framebuffer
-└── references Display
-
-Display
-└── references immutable Display Descriptor
-```
-
----
-
-## ✦ Display Lifecycle
-
-```text
-Create Display
-
-↓
-
-Initialize Display
-
-↓
-
-Create Canvas
-
-↓
-
-Draw
-
-↓
-
-Flush
-
-↓
-
-Repeat
-```
-
----
-
-## ✦ Coordinate System
+# ✦ Coordinate System
 
 ```text
 (0,0)
@@ -355,63 +230,58 @@ Repeat
 - Positive X: Right
 - Positive Y: Down
 
-Drawing operations perform clipping rather than raising exceptions when coordinates fall outside the visible area.
+Drawing operations clip to the drawable area rather than raising exceptions.
 
 ---
 
-## ✦ Color Model
+# ✦ Multiple Displays
 
-Glyph initially targets monochrome displays.
+Glyph is designed to support multiple independent display instances.
 
-Future color support will extend the existing API through additional pixel formats and color types instead of introducing separate drawing APIs.
+Each display instance owns its own:
 
----
+- Controller
+- Canvas
+- Framebuffer
 
-## ✦ Multiple Displays
-
-Glyph supports multiple independent displays.
-
-Each display has:
-
-- Its own display object
-- Its own canvas
-- Its own framebuffer
-
-Displays never share rendering state.
+No rendering state is shared.
 
 ---
 
-## ✦ Architecture Rules
+# ✦ Architecture Rules
 
 Every package added to Glyph must satisfy the following:
 
-- One primary responsibility
-- No duplicated ownership of information
-- Immutable configuration separated from runtime state
-- No dynamic memory allocation
-- No layer bypassing
+- One clear responsibility
+- No duplicated ownership
+- Static memory only
+- Compile-time configuration where practical
 - Stable public interfaces
-- Internal implementation remains private
+- Hardware independence
+- Layered architecture
 
 ---
 
-## ✦ Current Implementation Status
+# ✦ Current Status
 
-### Completed
+Completed:
 
-- Core package structure
-- Public API
-- Display abstraction
-- Display descriptors
-- Canvas lifecycle
-- Internal package layout
+- Overall architecture
+- Package hierarchy
+- Fundamental types
+- Pixel format definitions
 
-### Next Milestones
+Currently in progress:
 
-1. Framebuffer implementation
-2. Drawing primitives
-3. Controller implementations
-4. Transport implementations
-5. SSD1306 support
-6. Font rendering
-7. Additional display support
+1. Framebuffer
+2. Canvas
+3. SSD1306 controller
+
+Future milestones:
+
+1. Drawing primitives
+2. Font rendering
+3. Images
+4. Widgets
+5. Additional display controllers
+6. Color display support
