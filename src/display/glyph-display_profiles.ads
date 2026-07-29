@@ -1,6 +1,5 @@
 with Glyph.Types;
 with Glyph.Pixel_Formats;
-with Glyph.Pixel_Formats;
 
 package Glyph.Display_Profiles is
 
@@ -12,11 +11,11 @@ package Glyph.Display_Profiles is
    SSD1306_128_64 : constant Descriptor;
    SSD1306_128_32 : constant Descriptor;
 
-   function Width (Display : Descriptor) return Glyph.Types.Dimension;
-   function Height (Display : Descriptor) return Glyph.Types.Dimension;
+   function Width (Item : Descriptor) return Glyph.Types.Dimension;
+   function Height (Item : Descriptor) return Glyph.Types.Dimension;
 
    function Pixel_Format
-     (Display : Descriptor) return Glyph.Pixel_Formats.Pixel_Format;
+     (Item : Descriptor) return Glyph.Pixel_Formats.Pixel_Format;
 
 private
 
