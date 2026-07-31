@@ -1,21 +1,30 @@
 ------------------------------------------------------------------------------
 --  Glyph.Canvas
 --
---  Represents a drawing surface.
---
---  A Canvas stores rendering state and provides the primary drawing API for
---  applications. Drawing operations modify the canvas contents, while Flush
---  transfers the rendered image to the associated display.
+--  Drawing surface API. Manipulates the associated Framebuffer.
 ------------------------------------------------------------------------------
 
+with Glyph.Types; use Glyph.Types;
+with Glyph.Framebuffer;
+
+generic
+   with package FB is new Glyph.Framebuffer (<>);
 package Glyph.Canvas is
 
-   type Canvas is tagged limited private;
+   type Drawing_Canvas is tagged limited record
+      Buffer     : access FB.Framebuffer;
+      Clip_Min_X : Glyph.Types.Coordinate := 0;
+      Clip_Min_Y : Glyph.Types.Coordinate := 0;
+      Clip_Max_X : Glyph.Types.Coordinate := Glyph.Types.Coordinate (FB.Width - 1);
+      Clip_Max_Y : Glyph.Types.Coordinate := Glyph.Types.Coordinate (FB.Height - 1);
+   end record;
 
-   procedure Clear (Self : in out Canvas);
+   procedure Clear (Self : in out Drawing_Canvas);
 
-private
-
-   type Canvas is tagged limited null record;
+   procedure Draw_Pixel
+     (Self  : in out Drawing_Canvas;
+      X     : Glyph.Types.Coordinate;
+      Y     : Glyph.Types.Coordinate;
+      Color : Glyph.Types.Pixel_Color);
 
 end Glyph.Canvas;

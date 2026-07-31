@@ -1,8 +1,8 @@
 ------------------------------------------------------------------------------
---  Glyph.Controllers
+--  Glyph.Displays
 --
---  Parent package for display controller drivers.
+--  Parent package for display device composite units.
 ------------------------------------------------------------------------------
 
-package Glyph.Controllers is
-end Glyph.Controllers;
+package Glyph.Displays is
+end Glyph.Displays;

@@ -1,6 +1,16 @@
 project Glyph is
 
-   for Source_Dirs use ("src", "src/canvas", "src/pixel_formats", "src/controllers", "src/framebuffer");
+   for Source_Dirs use
+     (
+      "src",
+      "src/canvas",
+      "src/pixel_formats",
+      "src/controllers",
+      "src/framebuffer",
+      "src/transport",
+      "src/displays"
+     );
+
    for Object_Dir use "build/obj";
    for Exec_Dir use "build/bin";
 
@@ -9,6 +19,8 @@ project Glyph is
         (
          "-gnat2022",
          "-gnatwa",
+         "-gnatwJ",
+         "-gnatw.X",
          "-gnatf"
         );
    end Compiler;
