@@ -8,7 +8,10 @@ project Glyph is
       "src/controllers",
       "src/framebuffer",
       "src/transport",
-      "src/displays"
+      "src/displays",
+      "src/algorithms",
+      "src/algorithms/liang_barsky",
+      "src/algorithms/bresenham"
      );
 
    for Object_Dir use "build/obj";

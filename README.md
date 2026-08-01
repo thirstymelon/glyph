@@ -1,60 +1,83 @@
 # ✦ Glyph
 
-Glyph is a lightweight, portable embedded graphics framework written in Ada 2022 for bare-metal and embedded systems.
+Glyph is a lightweight, portable graphics framework for bare-metal and embedded systems, written in **Ada 2022**.
 
-The framework is designed around deterministic memory usage, static allocation (zero dynamic memory allocation), and a clean layered architecture that strictly separates graphics algorithms from display controller protocols and platform-specific hardware.
+Designed around deterministic execution, static memory allocation, and a layered architecture, Glyph cleanly separates graphics algorithms, framebuffer management, display controllers, and hardware transports. The project aims to provide a reusable graphics foundation for embedded applications rather than a collection of board-specific display drivers.
 
-Glyph is built as a reusable graphics library rather than a board-specific display driver. Its goal is to provide a clean, high-performance foundation for embedded graphics while remaining completely independent of any BSP, HAL, SDK, or RTOS.
+Glyph is completely independent of any BSP, HAL, SDK, or RTOS, making it suitable for a wide range of embedded targets.
 
-The initial hardware target is the **SSD1306 128x64 OLED display via I2C** on the **RP2040 (Vicharak Shrike-Lite)**, with the architecture built to expand to additional controllers (e.g. ST7789, ILI9341), transport interfaces (SPI, I2C), and color formats in future releases.
-
----
-
-# ✦ A Note from the Author
-
-> Glyph is my first embedded graphics framework and my first experience writing display drivers from scratch. I'm building this project while learning Ada, with the goal of gaining a deep understanding of graphics programming, embedded systems, and framework design through hands-on implementation.
->
-> I'm intentionally implementing every part of the framework myself, so I'm **not looking for direct feature implementations or pull requests that write the code for me**. The learning journey is the primary objective of this project.
->
-> I genuinely welcome architectural discussions, Ada best practices, design reviews, documentation improvements, bug reports, and constructive feedback. If you think something can be designed better, I'd love to hear your ideas.
+The initial development platform is the **Vicharak Shrike-Lite (RP2040)** driving an **SSD1306 128×64 OLED display over I²C**. The architecture is intentionally designed to support additional display controllers, transport interfaces, and pixel formats as the framework evolves.
 
 ---
 
-## ✦ Design Goals
+# ✦ About the Project
 
-- **Written in Ada 2022** (`-gnat2022`)
-- **100% Hardware Independent Core** (Zero BSP / SDK / RTOS dependencies)
-- **Zero Dynamic Memory Allocation** (Static memory and stack allocation only)
-- **Zero-Overhead Abstractions** (Compile-time generics and typed records)
-- **Strong Range Typing & Safety** (Coordinates, dimensions, and color states)
-- **Deterministic & Portable** for bare-metal embedded microcontrollers
+Glyph is both an open-source graphics framework and a personal learning project.
+
+This is my first embedded graphics framework and my first experience implementing display drivers and rendering algorithms from scratch. Rather than assembling existing libraries, I'm intentionally building every layer myself to gain a deeper understanding of:
+
+- Embedded graphics
+- Display controller protocols
+- Ada framework design
+- Bare-metal software architecture
+
+While I'm not looking for code contributions that implement features on my behalf, I greatly appreciate:
+
+- Architecture reviews
+- Ada best practices
+- Design discussions
+- Documentation improvements
+- Bug reports
+- Constructive feedback
+
+The goal is to learn by building while creating a useful graphics framework for the Ada embedded community.
+
+---
+
+## ✦ Design Principles
+
+Glyph is built around a small set of core principles:
+
+- **Ada 2022** throughout the entire codebase
+- **Hardware-independent core** with no BSP, HAL, SDK, or RTOS dependencies
+- **Zero dynamic memory allocation** using static memory only
+- **Deterministic execution** suitable for bare-metal systems
+- **Strong typing** for graphics primitives and geometry
+- **Layered architecture** with clear separation of responsibilities
+- **Reusable algorithms** independent of display hardware
+- **Portable by design** across microcontrollers and display controllers
 
 ---
 
 ## ✦ Current Status
 
-Glyph has completed its initial architectural foundation and **First Vertical Slice Proof of Work**, verified on physical hardware (Vicharak Shrike-Lite RP2040 + SSD1306 I2C OLED).
+Glyph has established its core architecture and graphics pipeline, including clipping, rasterization, framebuffer management, and hardware verification on a physical device.
 
-### Completed ✅
-- [x] Core project structure & Alire setup
-- [x] Strong scalar range types ([`Glyph.Types`](file:///Users/lokesh/Desktop/glyph/src/glyph-types.ads))
-- [x] Abstract Hardware Transport interface ([`Glyph.Transports`](file:///Users/lokesh/Desktop/glyph/src/transport/glyph-transports.ads))
-- [x] Static 2D Framebuffer with SSD1306 Vertical Page layout ([`Glyph.Framebuffer`](file:///Users/lokesh/Desktop/glyph/src/framebuffer/glyph-framebuffer.ads))
-- [x] Canvas API & viewport clipping ([`Glyph.Canvas`](file:///Users/lokesh/Desktop/glyph/src/canvas/glyph-canvas.ads))
-- [x] SSD1306 Display Controller & Flush pipeline ([`Glyph.Controllers.SSD1306`](file:///Users/lokesh/Desktop/glyph/src/controllers/glyph-controllers-ssd1306.ads))
-- [x] High-level Display composite unit ([`Glyph.Displays.SSD1306_128x64_I2C`](file:///Users/lokesh/Desktop/glyph/src/displays/glyph-displays-ssd1306_128x64_i2c.ads))
-- [x] **First Vertical Slice:** Single pixel rendered & verified on hardware
+### Completed
 
-### Planned ⏳
-- [ ] Drawing Primitives (Bresenham Lines, Rectangles, Circles)
-- [ ] Bitmap Font Rendering (5x7 & 8x8 character fonts)
-- [ ] Image rendering
-- [ ] Lightweight UI Widgets
-- [ ] SPI transport & Color display support (ST7789, ILI9341)
+- ✅ Core project structure and Alire integration
+- ✅ Strong scalar and geometric types (`Point`, `Line`, `Rect`, etc.)
+- ✅ Liang–Barsky line clipping algorithm
+- ✅ Bresenham integer line rasterization algorithm
+- ✅ Abstract transport interface
+- ✅ Static framebuffer implementation
+- ✅ Canvas drawing API
+- ✅ SSD1306 display controller
+- ✅ High-level display abstraction
+- ✅ Physical hardware verification on RP2040 + SSD1306
+
+### Planned
+
+- ⏳ Rectangle, circle, and ellipse primitives
+- ⏳ Bitmap font rendering
+- ⏳ Image rendering
+- ⏳ Lightweight UI widgets
+- ⏳ SPI transport support
+- ⏳ Additional display controllers (ST7789, ILI9341)
 
 ---
 
-## ✦ Architecture Overview
+## ✦ Architecture
 
 ```text
                +-------------------+
@@ -62,55 +85,92 @@ Glyph has completed its initial architectural foundation and **First Vertical Sl
                +---------+---------+
                          |
            +-------------+-------------+
-           | (Draws onto)              | (Triggers Flush)
+           |                           |
            ▼                           ▼
     +--------------+            +--------------+
     |    Canvas    |            |  Controller  |
     +------+-------+            +------+-------+
            |                           |
-           | (Mutates pixels)          | (Reads buffer)
            ▼                           |
     +--------------+                   |
     | Framebuffer  |<------------------+
-    +--------------+                   | (Transmits bytes)
+    +--------------+                   |
                                        ▼
                                +---------------+
                                |   Transport   |
                                +---------------+
 ```
 
-For full architectural specifications, see [ARCHITECTURE.md](ARCHITECTURE.md).
+The architecture intentionally separates:
+
+- **Algorithms** — clipping and rasterization
+- **Canvas** — drawing primitives
+- **Framebuffer** — pixel storage
+- **Controllers** — display protocols
+- **Transport** — hardware communication
+
+For a detailed architectural overview, see **ARCHITECTURE.md**.
 
 ---
 
-## ✦ Code Example (Firmware Integration)
+## ✦ Example
+
+The following example targets a **Vicharak Shrike-Lite (RP2040)** driving a **128×64 SSD1306 OLED** over **I²C**.
 
 ```ada
-with Pico_BSP.I2C;
-with Glyph.Transports;
+with RP.GPIO;          use RP.GPIO;
+with RP.I2C_Master;
+with RP.Device;
+with RP.Clock;
+with Pico;
+
+with Glyph.Types;      use Glyph.Types;
 with Glyph.Displays.SSD1306_128x64_I2C;
-with Glyph.Types; use Glyph.Types;
+with Pico_Transport;
 
 procedure Main is
 
-   -- 1. Implement Transport interface using platform I2C peripheral
-   type Pico_I2C_Transport is new Glyph.Transports.Transport with record
-      -- Address 0x3C
-   end record;
+   -- RP2040 I²C0 (Shrike-Lite)
+   Port : RP.I2C_Master.I2C_Master_Port renames RP.Device.I2CM_0;
+   SDA  : RP.GPIO.GPIO_Point renames Pico.GP8;
+   SCL  : RP.GPIO.GPIO_Point renames Pico.GP9;
 
-   -- 2. Instantiate Display Composite
-   I2C_Bus : aliased Pico_I2C_Transport;
-   OLED    : Glyph.Displays.SSD1306_128x64_I2C.Device (Bus => I2C_Bus'Access);
+   I2C_Bus :
+     aliased Pico_Transport.Pico_I2C_Transport
+       (Port_Ptr => Port'Access);
+
+   OLED :
+     Glyph.Displays.SSD1306_128x64_I2C.Device
+       (Bus => I2C_Bus'Access);
 
 begin
+   RP.Clock.Initialize (Pico.XOSC_Frequency);
+   RP.Clock.Enable (RP.Clock.PERI);
+
+   SDA.Configure (Output, Floating, RP.GPIO.I2C, Schmitt => True);
+   SCL.Configure (Output, Floating, RP.GPIO.I2C, Schmitt => True);
+
+   Port.Configure (Baudrate => 400_000);
+
    OLED.Initialize;
 
-   -- Drawing via Canvas
    OLED.Canvas.Clear;
-   OLED.Canvas.Draw_Pixel (X => 10, Y => 10, Color => On);
 
-   -- Flush payload to hardware
+   -- Draw a frame
+   OLED.Canvas.Glow_Line (0,   0,   127, 0,   On);
+   OLED.Canvas.Glow_Line (127, 0,   127, 63,  On);
+   OLED.Canvas.Glow_Line (127, 63,  0,   63,  On);
+   OLED.Canvas.Glow_Line (0,   63,  0,   0,   On);
+
+   -- Draw primitives
+   OLED.Canvas.Glow_Line (8, 8, 119, 55, On);
+   OLED.Canvas.Glow_Pixel (64, 32, On);
+
    OLED.Render;
+
+   loop
+      null;
+   end loop;
 end Main;
 ```
 
@@ -122,14 +182,29 @@ end Main;
 glyph/
 ├── config/
 ├── src/
-│   ├── canvas/          -- Drawing algorithms & clipping bounds
-│   ├── controllers/     -- Display IC protocol drivers (SSD1306)
-│   ├── displays/        -- High-level composite device units
-│   ├── framebuffer/     -- Static pixel storage & page layout
-│   ├── pixel_formats/   -- Color format definitions
-│   ├── transport/       -- Abstract I2C / SPI hardware interface
+│   ├── algorithms/          -- Pure graphics algorithms
+│   │   ├── bresenham/
+│   │   ├── liang_barsky/
+│   │   └── glyph-algorithms.ads
+│   │
+│   ├── canvas/              -- Glow_* drawing API
+│   │
+│   ├── controllers/         -- Display controller implementations
+│   │
+│   ├── displays/            -- High-level display composites
+│   │
+│   ├── framebuffer/         -- Static framebuffer implementation
+│   │
+│   ├── pixel_formats/       -- Pixel and color format definitions
+│   │
+│   ├── transport/           -- Hardware transport abstraction
+│   │
 │   ├── glyph.ads
-│   └── glyph-types.ads  -- Strong scalar range types
+│   └── glyph-types.ads
+│
+├── tests/
+│   └── unit/
+│
 ├── ARCHITECTURE.md
 ├── README.md
 ├── alire.toml
@@ -140,4 +215,4 @@ glyph/
 
 ## ✦ License
 
-Licensed under the Apache License 2.0.
+Glyph is licensed under the **Apache License 2.0**.
