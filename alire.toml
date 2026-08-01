@@ -3,7 +3,6 @@ version = "0.1.0"
 description = "Lightweight embedded graphics framework for Ada 2022"
 licenses = "Apache-2.0"
 website = "https://github.com/thirstymelon/glyph"
-repository = "https://github.com/thirstymelon/glyph"
 
 authors = ["Lokesh Panditi <lokesh.panditi.29@gmail.com>"]
 maintainers = ["Lokesh Panditi <lokesh.panditi.29@gmail.com>"]
