@@ -10,7 +10,7 @@ package body Glyph.Controllers.SSD1306 is
 
    package body Driver is
 
-      -- Minimal SSD1306 I2C Initialization Command Sequence
+      --  SSD1306 I2C Initialization Command Sequence
       Init_Cmds : constant Glyph.Types.Byte_Array :=
         (16#AE#,        -- Display OFF
          16#D5#, 16#80#, -- Set Display Clock Divide Ratio / Oscillator Frequency

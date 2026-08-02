@@ -20,7 +20,7 @@ package body Glyph.Canvas is
       Y     : Glyph.Types.Coordinate;
       Color : Glyph.Types.Pixel_Color) is
    begin
-      -- Apply Canvas clipping rectangle bounds
+
       if X >= Self.Clip_Min_X
         and X <= Self.Clip_Max_X
         and Y >= Self.Clip_Min_Y
@@ -52,15 +52,15 @@ package body Glyph.Canvas is
          Self.Glow_Pixel (X, Y, Color);
       end Plot_Canvas_Pixel;
 
-      -- Compile-time zero-cost binding of Bresenham rasterizer
+      -- Compile-time binding of Bresenham rasterizer
       procedure Draw_Rasterized_Line is new
         Glyph.Algorithms.Bresenham.Plot_Line (Put_Pixel => Plot_Canvas_Pixel);
 
    begin
-      -- Clips line to Canvas bounds using Liang-Barsky
+
       if Glyph.Algorithms.Liang_Barsky.Clip_Line (Target_Line, Clip_Window)
       then
-         -- Rasterize clipped line using Bresenham
+
          Draw_Rasterized_Line (Target_Line);
       end if;
    end Glow_Line;

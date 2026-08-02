@@ -1,18 +1,20 @@
 ------------------------------------------------------------------------------
 --  Glyph.Framebuffer
 --
---  Static pixel buffer management.
+--  Static pixel buffer.
+--  For now:
 --  Supports SSD1306 Vertical Page layout (8 vertical pixels per byte).
 ------------------------------------------------------------------------------
 
 with Glyph.Types;
 
 generic
-   Width  : Glyph.Types.Dimension;
+   Width : Glyph.Types.Dimension;
    Height : Glyph.Types.Dimension;
 package Glyph.Framebuffer is
 
-   Buffer_Size : constant Natural := (Natural (Width) * Natural (Height)) / 8;
+   Buffer_Size : constant Natural :=
+     Natural (Width) * ((Natural (Height) + 7) / 8);
 
    type Pixel_Buffer is array (1 .. Buffer_Size) of Glyph.Types.Byte;
    pragma Pack (Pixel_Buffer);

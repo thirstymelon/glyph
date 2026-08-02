@@ -1,76 +1,108 @@
 ------------------------------------------------------------------------------
 --  Glyph.Algorithms.Liang_Barsky
 --
---  Single canonical implementation of Liang-Barsky line clipping algorithm.
+--  Implementation of Liang-Barsky line clipping algorithm.
 ------------------------------------------------------------------------------
 
 package body Glyph.Algorithms.Liang_Barsky is
 
    type Edge_Index is (Left, Right, Bottom, Top);
-   type Edge_Array is array (Edge_Index) of Coordinate;
+
+   T_Scale : constant Calc := 256;
+
+   type Edge_Array is array (Edge_Index) of Calc;
+
+   function Floor_Divide (Numerator, Denominator : Calc) return Calc is
+   begin
+      if Denominator < 0 then
+         return Floor_Divide (-Numerator, -Denominator);
+      elsif Numerator >= 0 then
+         return Numerator / Denominator;
+      else
+         return -((-Numerator + Denominator - 1) / Denominator);
+      end if;
+   end Floor_Divide;
+
+   function Ceiling_Divide (Numerator, Denominator : Calc) return Calc is
+   begin
+      return -Floor_Divide (-Numerator, Denominator);
+   end Ceiling_Divide;
+
+   function Round_Divide (Numerator, Denominator : Calc) return Calc is
+   begin
+      if Numerator >= 0 then
+         return (Numerator + Denominator / 2) / Denominator;
+      else
+         return -((-Numerator + Denominator / 2) / Denominator);
+      end if;
+   end Round_Divide;
 
    function Clip_Line
      (Target_Line : in out Line; Clip_Rect : Rect) return Boolean
    is
-      dx : constant Coordinate :=
-        Target_Line.End_Point.X - Target_Line.Start_Point.X;
-      dy : constant Coordinate :=
-        Target_Line.End_Point.Y - Target_Line.Start_Point.Y;
+
+      X1 : constant Calc := Calc (Target_Line.Start_Point.X);
+      Y1 : constant Calc := Calc (Target_Line.Start_Point.Y);
+      X2 : constant Calc := Calc (Target_Line.End_Point.X);
+      Y2 : constant Calc := Calc (Target_Line.End_Point.Y);
+
+      DX : constant Calc := X2 - X1;
+      DY : constant Calc := Y2 - Y1;
 
       P : constant Edge_Array :=
-        (Left => -dx, Right => dx, Bottom => -dy, Top => dy);
+        (Left => -DX, Right => DX, Bottom => -DY, Top => DY);
 
       Q : constant Edge_Array :=
-        (Left   => Target_Line.Start_Point.X - Clip_Rect.Min_Point.X,
-         Right  => Clip_Rect.Max_Point.X - Target_Line.Start_Point.X,
-         Bottom => Target_Line.Start_Point.Y - Clip_Rect.Min_Point.Y,
-         Top    => Clip_Rect.Max_Point.Y - Target_Line.Start_Point.Y);
+        (Left   => X1 - Calc (Clip_Rect.Min_Point.X),
+         Right  => Calc (Clip_Rect.Max_Point.X) - X1,
+         Bottom => Y1 - Calc (Clip_Rect.Min_Point.Y),
+         Top    => Calc (Clip_Rect.Max_Point.Y) - Y1);
 
-      U_One : Real := 0.0;
-      U_Two : Real := 1.0;
-      R     : Real;
-
-      Orig_Start_X : constant Coordinate := Target_Line.Start_Point.X;
-      Orig_Start_Y : constant Coordinate := Target_Line.Start_Point.Y;
-
+      U_One : Calc := 0;
+      U_Two : Calc := T_Scale;
+      R     : Calc;
    begin
       for E in Edge_Index loop
          if P (E) = 0 then
-            --  Line is parallel to edge: if outside clipping box, reject
+            --  Parallel to this edge; reject if outside.
             if Q (E) < 0 then
                return False;
             end if;
-         else
-            R := Real (Q (E)) / Real (P (E));
 
-            if P (E) < 0 then
-               --  Line is entering edge (pointing inward)
-               U_One := Real'Max (U_One, R);
-               if U_One > U_Two then
-                  return False;
-               end if;
-            else
-               --  Line is leaving edge (pointing outward)
-               U_Two := Real'Min (U_Two, R);
-               if U_One > U_Two then
-                  return False;
-               end if;
+         elsif P (E) < 0 then
+            --  Entering edge: round upward.
+            R := Ceiling_Divide (Q (E) * T_Scale, P (E));
+
+            if R > U_One then
+               U_One := R;
             end if;
+
+         else
+            --  Leaving edge: round downward.
+            R := Floor_Divide (Q (E) * T_Scale, P (E));
+
+            if R < U_Two then
+               U_Two := R;
+            end if;
+         end if;
+
+         if U_One > U_Two then
+            return False;
          end if;
       end loop;
 
-      --  Update Target_Line endpoints rounding
+      --  Convert fixed-point t values back to coordinates.
       Target_Line.Start_Point.X :=
-        Orig_Start_X + Coordinate (Real'Rounding (Real (dx) * U_One));
+        Coordinate (X1 + Round_Divide (DX * U_One, T_Scale));
       Target_Line.Start_Point.Y :=
-        Orig_Start_Y + Coordinate (Real'Rounding (Real (dy) * U_One));
+        Coordinate (Y1 + Round_Divide (DY * U_One, T_Scale));
+
       Target_Line.End_Point.X :=
-        Orig_Start_X + Coordinate (Real'Rounding (Real (dx) * U_Two));
+        Coordinate (X1 + Round_Divide (DX * U_Two, T_Scale));
       Target_Line.End_Point.Y :=
-        Orig_Start_Y + Coordinate (Real'Rounding (Real (dy) * U_Two));
+        Coordinate (Y1 + Round_Divide (DY * U_Two, T_Scale));
 
       return True;
-
    end Clip_Line;
 
 end Glyph.Algorithms.Liang_Barsky;

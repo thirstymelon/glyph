@@ -10,8 +10,9 @@ package Glyph.Types is
    type Coordinate is range -32_768 .. 32_767;
    type Dimension is range 0 .. 32_767;
 
-   --  Standard floating-point scalar for graphics algorithms
    subtype Real is Float;
+
+   subtype Calc is Integer;
 
    --  2D Point
    type Point is record

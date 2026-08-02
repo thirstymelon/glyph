@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
 --  Glyph.Framebuffer
 --
---  Implementation of static pixel buffer operations and SSD1306 bit math.
+--  Implementation of static pixel buffer.
 ------------------------------------------------------------------------------
 
 package body Glyph.Framebuffer is
@@ -24,7 +24,7 @@ package body Glyph.Framebuffer is
       Byte_Idx  : Natural;
       Bit_Mask  : Glyph.Types.Byte;
    begin
-      -- Bounds check: ignore out-of-bounds pixels
+
       if X < 0 or X >= Glyph.Types.Coordinate (Width) or
          Y < 0 or Y >= Glyph.Types.Coordinate (Height)
       then
@@ -34,7 +34,7 @@ package body Glyph.Framebuffer is
       -- SSD1306 Page-mode math: 8 vertical pixels per byte
       Page      := Natural (Y) / 8;
       Bit_Index := Natural (Y) rem 8;
-      Byte_Idx  := (Page * Natural (Width)) + Natural (X) + 1; -- 1-based Ada array
+      Byte_Idx  := (Page * Natural (Width)) + Natural (X) + 1;       -- 1-based Ada array
       Bit_Mask  := Glyph.Types.Byte (2 ** Bit_Index);
 
       case Color is

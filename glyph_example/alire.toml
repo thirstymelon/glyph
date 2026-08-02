@@ -1,0 +1,18 @@
+name = "glyph_example"
+description = ""
+version = "0.1.0-dev"
+
+authors = ["Lokesh"]
+maintainers = ["Lokesh <lokesh.panditi.29@gmail.com>"]
+maintainers-logins = ["thirstymelon"]
+licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
+website = ""
+tags = []
+
+executables = ["glyph_example"]
+
+[[depends-on]]
+pico_bsp = "^2.2.0"
+
+[[depends-on]]
+glyph = "~0.1.0"
