@@ -1,5 +1,5 @@
 name = "glyph"
-version = "0.1.0"
+version = "0.2.0"
 description = "Lightweight embedded graphics framework for Ada 2022"
 licenses = "Apache-2.0"
 website = "https://github.com/thirstymelon/glyph"
