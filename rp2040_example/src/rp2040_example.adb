@@ -14,7 +14,7 @@ with Glyph.Types; use Glyph.Types;
 with Glyph.Displays.SSD1306_128x64_I2C;
 with Glue;
 
-procedure Glyph_Example is
+procedure Rp2040_Example is
 
    --  Vicharak Shrike-Lite Left Header I2C0 Pins:
    --  IO8 (RP_IO8) = I2C0 SDA, IO9 (RP_IO9) = I2C0 SCL
@@ -61,4 +61,4 @@ begin
    loop
       null;
    end loop;
-end Glyph_Example;
+end Rp2040_Example;

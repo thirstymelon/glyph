@@ -4,13 +4,13 @@
 
 Glyph is a portable embedded graphics framework designed for bare-metal systems.
 
-The framework is built around a strict layered architecture that separates graphics algorithms, drawing operations, framebuffer management, display controllers, and hardware communication. Each layer has a single responsibility and communicates only with the layer directly beneath it.
+The framework is built around a strict layered architecture that separates graphics algorithms, drawing operations, framebuffer management, display memory layouts, display controllers, and hardware communication. Each layer has a single responsibility and communicates only with the layer directly beneath it.
 
 This separation allows the graphics core to remain completely independent of any BSP, HAL, SDK, RTOS, or specific microcontroller.
 
 ---
 
-## ✦ Design Objectives
+# ✦ Design Objectives
 
 The architecture is guided by the following principles:
 
@@ -21,17 +21,15 @@ The architecture is guided by the following principles:
 - Static composition through Ada generics
 - Clear package responsibilities
 - Reusable graphics algorithms
+- Display memory layouts isolated from framebuffer logic
 - Portable across embedded platforms
 
 ---
 
-## ✦ System Architecture
+# ✦ System Architecture
 
 ```text
                                Application
-                                     │
-                                     │
-                         Glow_* Drawing API
                                      │
                                      ▼
                             +----------------+
@@ -45,22 +43,22 @@ The architecture is guided by the following principles:
            |    Canvas    |                  |  Controller   |
            +------+-------+                  +-------+-------+
                   │                                  │
-                  ▼                                  │ (Reads buffer &
-           +--------------+                          │  transmits payload)
-           | Framebuffer  |<-------------------------+
+                  ▼                                  │
            +--------------+                          │
-                                                     ▼
-                                             +---------------+
-                                             |  Transports   |
-                                             +-------+-------+
-                                                     │
-                                                     ▼
-                                              Display Hardware
+           | Framebuffer  |<-------------------------+
+           +------+-------+                          │
+                  │                                  ▼
+                  ▼                           +---------------+
+           +--------------+                   |  Transport    |
+           |    Layout    |                   +---------------+
+           +--------------+                          │
+                                                    ▼
+                                             Display Hardware
 ```
 
 ---
 
-## ✦ Internal Graphics Pipeline
+# ✦ Internal Graphics Pipeline
 
 Every drawing operation follows the same rendering pipeline.
 
@@ -82,10 +80,13 @@ Glow_Pixel(...)
 Framebuffer
       │
       ▼
+Layout
+      │
+      ▼
 Controller
       │
       ▼
-Transports
+Transport
       │
       ▼
 Display
@@ -101,21 +102,15 @@ Each stage performs exactly one task and remains independent from the others.
 Glyph
 │
 ├── Types
-│
 ├── Algorithms
 │   ├── Bresenham
 │   └── Liang_Barsky
-│
 ├── Pixel_Formats
-│
+├── Layouts
 ├── Framebuffer
-│
 ├── Canvas
-│
 ├── Controllers
-│
 ├── Displays
-│
 └── Transports
 ```
 
@@ -135,7 +130,7 @@ Examples include:
 - Lines
 - Rectangles
 - Pixel colors
-- Real scalar helper types
+- Scalar helper types
 
 This package forms the foundation of the entire framework and has no dependencies on other Glyph packages.
 
@@ -145,7 +140,7 @@ This package forms the foundation of the entire framework and has no dependencie
 
 Contains reusable graphics algorithms.
 
-Algorithms are completely independent of hardware, display controllers, and framebuffer implementations.
+Algorithms are completely independent of hardware, display controllers, framebuffer implementations, and memory layouts.
 
 Current algorithms include:
 
@@ -161,18 +156,37 @@ Future algorithms may include:
 
 ---
 
+## Glyph.Layouts
+
+Layout packages describe how pixels are arranged in framebuffer memory.
+
+A layout converts a logical `(X, Y)` pixel coordinate into the corresponding memory location without knowing anything about display controllers or transport hardware.
+
+Current implementation:
+
+- SSD1306 page-oriented layout
+
+Future layouts may include:
+
+- Linear monochrome
+- RGB565
+- RGB888
+- Grayscale formats
+
+---
+
 ## Glyph.Framebuffer
 
 Provides statically allocated pixel storage.
 
-The framebuffer owns the display memory representation while remaining unaware of display protocols or graphics algorithms.
+The framebuffer owns the display memory representation while remaining unaware of display controllers, transport hardware, or layout-specific coordinate mapping.
 
 Responsibilities include:
 
 - Pixel storage
-- Pixel access
+- Pixel updates
 - Buffer clearing
-- Pixel format mapping
+- Delegating coordinate mapping to a layout package
 
 ---
 
@@ -182,14 +196,12 @@ Provides the public graphics API.
 
 The Canvas coordinates graphics algorithms and framebuffer operations to expose a simple drawing interface.
 
-The Canvas is the primary entry point for application rendering.
-
 Current public primitives include:
 
 - `Glow_Pixel`
 - `Glow_Line`
 
-Additional primitives will be implemented on top of these core operations.
+Future primitives will be implemented on top of these core operations.
 
 ---
 
@@ -237,19 +249,26 @@ into a single object that applications can instantiate with minimal configuratio
 Glyph follows a strict one-way dependency model.
 
 ```text
-       Types
-      ▲     ▲
-      │     │
-Algorithms  Framebuffer
-      ▲     ▲
-      │     │
-      Canvas
-        ▲
-        │
-     Displays
-```
+                 Types
+              ▲    ▲    ▲
+              │    │    │
+      Algorithms  Layouts
+              ▲      ▲
+              │      │
+              └──┬───┘
+                 │
+           Framebuffer
+                 ▲
+                 │
+              Canvas
+                 ▲
+                 │
+             Displays
 
-Controllers communicate with the framebuffer and transport layer but remain independent of graphics algorithms.
+Controllers depend on:
+- Framebuffer
+- Transport
+```
 
 No lower layer may depend on a higher layer.
 
@@ -259,7 +278,7 @@ No lower layer may depend on a higher layer.
 
 The following constraints apply to every package in Glyph.
 
-### Hardware Independence
+## Hardware Independence
 
 The graphics core must never depend on:
 
@@ -271,7 +290,7 @@ The graphics core must never depend on:
 
 ---
 
-### Static Memory
+## Static Memory
 
 Glyph never performs dynamic memory allocation.
 
@@ -279,19 +298,19 @@ All memory is allocated statically or on the stack through Ada language features
 
 ---
 
-### Single Responsibility
+## Single Responsibility
 
-Every package should have one clearly defined purpose.
+Every package has one clearly defined responsibility.
 
-Graphics algorithms should not know about display controllers.
-
-Controllers should not know about drawing algorithms.
-
-Transport implementations should not know about graphics primitives.
+- Graphics algorithms never know about display controllers.
+- Layouts never know about framebuffer storage.
+- Framebuffers never know about display memory layouts.
+- Controllers never know about drawing algorithms.
+- Transport implementations never know about graphics primitives.
 
 ---
 
-### Composition over Coupling
+## Composition over Coupling
 
 Complex functionality is built by composing independent packages rather than tightly coupling responsibilities.
 
@@ -307,7 +326,7 @@ Current development target:
 - SSD1306 128×64 OLED
 - I²C transport
 
-The architecture is intentionally designed to support additional microcontrollers, transports, and display controllers without modifying the graphics core.
+A complete reference implementation is available in the **`rp2040_example/`** project included in this repository.
 
 ---
 
@@ -318,8 +337,9 @@ The current architecture provides a foundation for future capabilities, includin
 - Additional drawing primitives
 - Bitmap and vector fonts
 - Image rendering
-- Color displays
-- Multiple framebuffer formats
+- Multiple framebuffer layouts
+- Multiple pixel formats
+- Additional display controllers
 - Hardware acceleration where available
 - Lightweight embedded UI widgets
 

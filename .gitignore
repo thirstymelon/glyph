@@ -14,9 +14,6 @@ alire.lock
 # Build output
 build/
 
-# Proof of work application
-shrike_lite_oled/
-
 # Ada
 *.o
 *.ali

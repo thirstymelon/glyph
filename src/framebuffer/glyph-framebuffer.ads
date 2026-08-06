@@ -1,9 +1,8 @@
 ------------------------------------------------------------------------------
---  Glyph.Framebuffer
+--  Static framebuffer implementation.
 --
---  Static pixel buffer.
---  For now:
---  Supports SSD1306 Vertical Page layout (8 vertical pixels per byte).
+--  Pixel memory ownership and pixel update operations.
+--  Pixel coordinate mapping is delegated to a memory layout package.
 ------------------------------------------------------------------------------
 
 with Glyph.Types;

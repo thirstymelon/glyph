@@ -1,18 +1,6 @@
 project Glyph is
 
-   for Source_Dirs use
-     (
-      "src",
-      "src/canvas",
-      "src/pixel_formats",
-      "src/controllers",
-      "src/framebuffer",
-      "src/transport",
-      "src/displays",
-      "src/algorithms",
-      "src/algorithms/liang_barsky",
-      "src/algorithms/bresenham"
-     );
+   for Source_Dirs use ("src/**");
 
    for Object_Dir use "build/obj";
    for Exec_Dir use "build/bin";
