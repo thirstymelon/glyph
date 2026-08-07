@@ -37,4 +37,14 @@ package Glyph.Canvas is
       To_Y   : Glyph.Types.Coordinate;
       Color  : Glyph.Types.Pixel_Color);
 
+   procedure Glow_Rectangle
+     (Self  : in out Drawing_Canvas;
+      Area  : Glyph.Types.Rect;
+      Color : Glyph.Types.Pixel_Color);
+
+   procedure Glow_Filled_Rectangle
+     (Self  : in out Drawing_Canvas;
+      Area  : Glyph.Types.Rect;
+      Color : Glyph.Types.Pixel_Color);
+
 end Glyph.Canvas;

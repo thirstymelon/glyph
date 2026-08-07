@@ -18,7 +18,7 @@ Glyph is designed, implemented, and maintained by me as a personal learning proj
 
 Glyph is both an open-source graphics framework and a personal learning project.
 
-This is my first embedded graphics framework and my first experience implementing display drivers and rendering algorithms from scratch. Rather than assembling existing libraries, I'm intentionally building every layer myself to gain a deeper understanding of:
+This is my first embedded graphics framework and my first experience implementing display drivers, rendering algorithms, and graphics abstractions from scratch. Rather than assembling existing libraries, I'm intentionally building every layer myself to gain a deeper understanding of:
 
 - Embedded graphics
 - Display controller protocols
@@ -43,100 +43,108 @@ The goal is to learn by building while creating a useful graphics framework for 
 Glyph is built around a small set of core principles:
 
 - **Ada 2022** throughout the entire codebase
-- **Hardware-independent core** with no BSP, HAL, SDK, or RTOS dependencies
-- **Zero dynamic memory allocation** using static memory only
-- **Deterministic execution** suitable for bare-metal systems
-- **Strong typing** for graphics primitives and geometry
-- **Layered architecture** with clear separation of responsibilities
-- **Reusable graphics algorithms** independent of display hardware
-- **Portable by design** across microcontrollers and display controllers
+- **Hardware-independent graphics core**
+- **Zero dynamic memory allocation**
+- **Deterministic execution**
+- **Strong type safety**
+- **Layered architecture**
+- **Reusable graphics algorithms**
+- **Portable across embedded platforms**
+
+For a detailed explanation of the framework architecture, see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
+
+---
+
+# ✦ Current Features
+
+Glyph currently provides:
+
+- Pixel drawing
+- Line drawing
+- Rectangle drawing
+- Filled rectangle drawing
+- Liang–Barsky line clipping
+- Bresenham integer line rasterization
+- Rectangle rasterization algorithms
+- Static framebuffer
+- Display memory layout abstraction
+- SSD1306 display controller
+- High-level display abstraction
+- Hardware-independent transport interface
 
 ---
 
 # ✦ Current Status
 
-Glyph has established its core graphics architecture, including clipping, rasterization, framebuffer management, display composition, memory layout abstraction, and hardware verification on a physical RP2040-based target.
-
 ## Completed
 
-- ✅ Core project structure and Alire integration
-- ✅ Strong scalar and geometric types (`Point`, `Line`, `Rect`, etc.)
-- ✅ Liang–Barsky line clipping algorithm
-- ✅ Bresenham integer line rasterization algorithm
-- ✅ Abstract transport interface
-- ✅ Memory layout abstraction
-- ✅ SSD1306 page layout implementation
-- ✅ Static framebuffer implementation
-- ✅ Canvas drawing API
-- ✅ SSD1306 display controller
-- ✅ High-level display abstraction
-- ✅ RP2040 reference application
-- ✅ Physical hardware verification on RP2040 + SSD1306
+- ☑ Core project structure
+- ☑ Alire integration
+- ☑ Strong scalar and geometric types (`Point`, `Line`, `Rect`, etc.)
+- ☑ Liang–Barsky line clipping
+- ☑ Bresenham line rasterization
+- ☑ Rectangle primitive
+- ☑ Filled rectangle primitive
+- ☑ Generic graphics algorithm framework
+- ☑ Static framebuffer implementation
+- ☑ Memory layout abstraction
+- ☑ SSD1306 page layout
+- ☑ SSD1306 display controller
+- ☑ Transport abstraction
+- ☑ High-level display abstraction
+- ☑ RP2040 reference application
+- ☑ Verified on physical RP2040 + SSD1306 hardware
 
 ## Planned
 
-- ⏳ Rectangle, circle, and ellipse primitives
-- ⏳ Bitmap font rendering
-- ⏳ Image rendering
-- ⏳ Lightweight UI widgets
-- ⏳ SPI transport support
-- ⏳ Additional display controllers
-- ⏳ Additional framebuffer layouts
-- ⏳ Additional pixel formats
+### Graphics
 
----
+- ☐ Circle
+- ☐ Filled Circle
+- ☐ Ellipse
+- ☐ Filled Ellipse
+- ☐ Triangle
+- ☐ Filled Triangle
 
-# ✦ Architecture
+### Rendering
 
-```text
-               +-------------------+
-               |    Application    |
-               +---------+---------+
-                         |
-           +-------------+-------------+
-           |                           |
-           ▼                           ▼
-    +--------------+            +--------------+
-    |    Canvas    |            |  Controller  |
-    +------+-------+            +------+-------+
-           |                           |
-           ▼                           |
-    +--------------+                   |
-    | Framebuffer  |<------------------+
-    +------+-------+                   |
-           |                           |
-           ▼                           ▼
-      +-----------+              +---------------+
-      |  Layout   |              |   Transport   |
-      +-----------+              +---------------+
-```
+- ☐ Partial display updates
+- ☐ Dirty rectangle tracking
+- ☐ Region clipping
+- ☐ Optimized framebuffer flushing
 
-The architecture intentionally separates:
+### Text & Images
 
-- **Algorithms** — clipping and rasterization
-- **Canvas** — drawing primitives
-- **Framebuffer** — pixel storage
-- **Layouts** — pixel memory mapping
-- **Controllers** — display protocols
-- **Transport** — hardware communication
+- ☐ Bitmap fonts
+- ☐ UTF-8 text rendering
+- ☐ Image rendering
 
-For a detailed architectural overview, see **ARCHITECTURE.md**.
+### Hardware
+
+- ☐ SPI transport
+- ☐ Additional display controllers
+- ☐ Additional framebuffer layouts
+- ☐ Additional pixel formats
+
+### UI
+
+- ☐ Lightweight embedded UI widgets
 
 ---
 
 # ✦ RP2040 Example
 
-A complete reference application is included in the repository under **`rp2040_example/`**.
+A complete reference application is included in **`rp2040_example/`**.
 
-The example targets a **Vicharak Shrike-Lite (RP2040)** driving a **128×64 SSD1306 OLED** over **I²C**, and demonstrates:
+The example demonstrates:
 
 - RP2040 initialization
 - Pico_BSP transport implementation
-- Display initialization
+- SSD1306 initialization
 - Drawing primitives
 - Rendering to the display
 
-The example also illustrates the intended separation between Glyph and platform-specific code by implementing the transport layer as application glue.
+It also illustrates the intended separation between Glyph and platform-specific code by implementing the transport layer as application glue.
 
 ---
 
@@ -144,16 +152,20 @@ The example also illustrates the intended separation between Glyph and platform-
 
 ```text
 glyph/
-├── rp2040_example/     -- RP2040 reference application
+├── rp2040_example/
 ├── src/
-│   ├── algorithms/     -- Graphics algorithms
-│   ├── canvas/         -- Drawing API
-│   ├── controllers/    -- Display controllers
-│   ├── displays/       -- Display composites
-│   ├── framebuffer/    -- Framebuffer implementation
-│   ├── layouts/        -- Framebuffer memory layouts
-│   ├── pixel_formats/  -- Pixel format definitions
-│   ├── transport/      -- Hardware transport abstraction
+│   ├── algorithms/
+│   │   ├── bresenham/
+│   │   ├── liang_barsky/
+│   │   └── rectangle/
+│   ├── canvas/
+│   │   └── rectangle/
+│   ├── controllers/
+│   ├── displays/
+│   ├── framebuffer/
+│   ├── layouts/
+│   ├── pixel_formats/
+│   ├── transport/
 │   ├── glyph.ads
 │   └── glyph-types.ads
 ├── config/
@@ -162,6 +174,34 @@ glyph/
 ├── alire.toml
 └── glyph.gpr
 ```
+
+---
+
+# ✦ Goals
+
+Glyph aims to become a reusable graphics framework for embedded Ada systems by providing:
+
+- Clean and strongly typed APIs
+- Hardware-independent graphics primitives
+- Efficient rendering algorithms
+- Portable display abstractions
+- Static memory usage
+- Deterministic execution
+
+---
+
+# ✦ Non-Goals
+
+Glyph is **not** intended to provide:
+
+- Desktop GUI frameworks
+- GPU acceleration
+- Dynamic memory allocation
+- Operating system integration
+- Window management
+- Scene graphs
+
+The primary focus remains small embedded systems and microcontrollers.
 
 ---
 

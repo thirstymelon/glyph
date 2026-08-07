@@ -1,6 +1,6 @@
 name = "glyph"
-version = "0.2.0"
-description = "Lightweight embedded graphics framework for Ada 2022"
+version = "0.3.0"
+description = "Portable graphics framework for embedded Ada systems"
 licenses = "Apache-2.0"
 website = "https://github.com/thirstymelon/glyph"
 

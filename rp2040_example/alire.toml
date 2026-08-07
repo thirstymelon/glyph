@@ -13,6 +13,3 @@ executables = ["rp2040_example"]
 
 [[depends-on]]
 pico_bsp = "^2.2.0"
-
-[[depends-on]]
-glyph = "~0.1.0"

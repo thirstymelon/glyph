@@ -16,6 +16,6 @@
 
 package Glyph is
 
-   Current_Version : constant String := "0.2.0";
+   Current_Version : constant String := "0.3.0";
 
 end Glyph;

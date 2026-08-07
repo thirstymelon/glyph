@@ -36,25 +36,47 @@ begin
    OLED.Initialize;
    OLED.Canvas.Clear;
 
-   --  Draws a rectangle
-   OLED.Canvas.Glow_Line (0, 0, 127, 0, On);       -- top
-   OLED.Canvas.Glow_Line (127, 0, 127, 63, On);    -- right
-   OLED.Canvas.Glow_Line (127, 63, 0, 63, On);     -- bottom
-   OLED.Canvas.Glow_Line (0, 63, 0, 0, On);        -- left
+   -- Outer border
+   OLED.Canvas.Glow_Rectangle
+     (Area  =>
+        (Min_Point => (X => 0, Y => 0), Max_Point => (X => 127, Y => 63)),
+      Color => On);
 
-   --  Downward-sloping threads
-   OLED.Canvas.Glow_Line (-20, 0, 147, 40, On);
-   OLED.Canvas.Glow_Line (-20, 12, 147, 52, On);
-   OLED.Canvas.Glow_Line (-20, 24, 147, 64, On);
-   OLED.Canvas.Glow_Line (-20, 36, 147, 76, On);
-   OLED.Canvas.Glow_Line (-20, 48, 147, 88, On);
+   -- Concentric rectangles
+   OLED.Canvas.Glow_Rectangle
+     (Area  =>
+        (Min_Point => (X => 8, Y => 4), Max_Point => (X => 119, Y => 59)),
+      Color => On);
 
-   --  Upward-sloping threads
-   OLED.Canvas.Glow_Line (-20, 63, 147, 23, On);
-   OLED.Canvas.Glow_Line (-20, 51, 147, 11, On);
-   OLED.Canvas.Glow_Line (-20, 39, 147, -1, On);
-   OLED.Canvas.Glow_Line (-20, 27, 147, -13, On);
-   OLED.Canvas.Glow_Line (-20, 15, 147, -25, On);
+   OLED.Canvas.Glow_Rectangle
+     (Area  =>
+        (Min_Point => (X => 16, Y => 8), Max_Point => (X => 111, Y => 55)),
+      Color => On);
+
+   OLED.Canvas.Glow_Rectangle
+     (Area  =>
+        (Min_Point => (X => 24, Y => 12), Max_Point => (X => 103, Y => 51)),
+      Color => On);
+
+   -- Center cross
+   OLED.Canvas.Glow_Line (0, 31, 127, 31, On);
+   OLED.Canvas.Glow_Line (63, 0, 63, 63, On);
+
+   -- Diagonals
+   OLED.Canvas.Glow_Line (0, 0, 127, 63, On);
+   OLED.Canvas.Glow_Line (0, 63, 127, 0, On);
+
+   -- Filled center
+   OLED.Canvas.Glow_Filled_Rectangle
+     (Area  =>
+        (Min_Point => (X => 54, Y => 22), Max_Point => (X => 72, Y => 40)),
+      Color => On);
+
+   -- Corner pixels
+   OLED.Canvas.Glow_Pixel (50, 18, On);
+   OLED.Canvas.Glow_Pixel (50, 44, On);
+   OLED.Canvas.Glow_Pixel (76, 44, On);
+   OLED.Canvas.Glow_Pixel (76, 18, On);
 
    OLED.Render;
 

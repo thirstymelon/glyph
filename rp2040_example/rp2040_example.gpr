@@ -1,6 +1,6 @@
 with "config/rp2040_example_config.gpr";
 with "pico_bsp.gpr";
-with "glyph.gpr";
+with "../glyph.gpr";
 
 project RP2040_Example is
 

@@ -2,11 +2,13 @@
 
 ## Overview
 
-Glyph is a portable embedded graphics framework designed for bare-metal systems.
+Glyph is a portable graphics framework for bare-metal embedded systems.
 
-The framework is built around a strict layered architecture that separates graphics algorithms, drawing operations, framebuffer management, display memory layouts, display controllers, and hardware communication. Each layer has a single responsibility and communicates only with the layer directly beneath it.
+The framework follows a strict layered architecture that separates graphics algorithms, drawing operations, framebuffer management, display memory layouts, display controllers, and hardware communication.
 
-This separation allows the graphics core to remain completely independent of any BSP, HAL, SDK, RTOS, or specific microcontroller.
+Each layer has a single responsibility and communicates only with the layer directly beneath it.
+
+This separation keeps the graphics core completely independent of any BSP, HAL, SDK, RTOS, or specific microcontroller.
 
 ---
 
@@ -21,8 +23,8 @@ The architecture is guided by the following principles:
 - Static composition through Ada generics
 - Clear package responsibilities
 - Reusable graphics algorithms
-- Display memory layouts isolated from framebuffer logic
 - Portable across embedded platforms
+- Minimal coupling between layers
 
 ---
 
@@ -58,12 +60,51 @@ The architecture is guided by the following principles:
 
 ---
 
-# ✦ Internal Graphics Pipeline
+# ✦ Rendering Pipeline
 
-Every drawing operation follows the same rendering pipeline.
+Every drawing primitive follows the same rendering pipeline.
 
 ```text
-Glow_Line(...)
+Glow_Primitive(...)
+        │
+        ▼
+Canvas
+        │
+        ▼
+Graphics Algorithm
+        │
+        ▼
+Put_Pixel()
+        │
+        ▼
+Glow_Pixel()
+        │
+        ▼
+Framebuffer
+        │
+        ▼
+Layout
+        │
+        ▼
+Controller
+        │
+        ▼
+Transport
+        │
+        ▼
+Display
+```
+
+Each stage performs exactly one task and remains independent from the others.
+
+---
+
+# ✦ Example Rendering Pipelines
+
+## Line
+
+```text
+Glow_Line()
       │
       ▼
 Liang–Barsky
@@ -74,25 +115,27 @@ Bresenham
 (Line Rasterization)
       │
       ▼
-Glow_Pixel(...)
-      │
-      ▼
-Framebuffer
-      │
-      ▼
-Layout
-      │
-      ▼
-Controller
-      │
-      ▼
-Transport
-      │
-      ▼
-Display
+Put_Pixel()
 ```
 
-Each stage performs exactly one task and remains independent from the others.
+---
+
+## Rectangle
+
+```text
+Glow_Rectangle()
+       │
+       ▼
+Rectangle Algorithm
+       │
+       ▼
+Horizontal / Vertical Rasterization
+       │
+       ▼
+Put_Pixel()
+```
+
+Future primitives such as circles, ellipses, and triangles will follow the same design philosophy by delegating rendering to reusable algorithm packages.
 
 ---
 
@@ -104,7 +147,8 @@ Glyph
 ├── Types
 ├── Algorithms
 │   ├── Bresenham
-│   └── Liang_Barsky
+│   ├── Liang_Barsky
+│   └── Rectangle
 ├── Pixel_Formats
 ├── Layouts
 ├── Framebuffer
@@ -120,7 +164,7 @@ Glyph
 
 ## Glyph.Types
 
-Defines the fundamental data types used throughout the framework.
+Defines the fundamental types used throughout the framework.
 
 Examples include:
 
@@ -130,9 +174,9 @@ Examples include:
 - Lines
 - Rectangles
 - Pixel colors
-- Scalar helper types
+- Helper scalar types
 
-This package forms the foundation of the entire framework and has no dependencies on other Glyph packages.
+This package forms the foundation of Glyph and has no dependencies on other Glyph packages.
 
 ---
 
@@ -140,38 +184,59 @@ This package forms the foundation of the entire framework and has no dependencie
 
 Contains reusable graphics algorithms.
 
-Algorithms are completely independent of hardware, display controllers, framebuffer implementations, and memory layouts.
+Algorithms are completely independent of:
+
+- Canvas
+- Framebuffer
+- Layouts
+- Controllers
+- Displays
+- Transport hardware
 
 Current algorithms include:
 
 - Liang–Barsky line clipping
 - Bresenham line rasterization
+- Rectangle rasterization
 
 Future algorithms may include:
 
-- Circle rasterization
-- Ellipse rasterization
+- Midpoint Circle
+- Midpoint Ellipse
+- Triangle rasterization
 - Polygon filling
 - Bézier curves
 
 ---
 
-## Glyph.Layouts
+## Glyph.Canvas
 
-Layout packages describe how pixels are arranged in framebuffer memory.
+Canvas exposes the public drawing API.
 
-A layout converts a logical `(X, Y)` pixel coordinate into the corresponding memory location without knowing anything about display controllers or transport hardware.
+It coordinates graphics algorithms with framebuffer operations while keeping drawing logic minimal.
 
-Current implementation:
+Canvas is responsible for:
 
-- SSD1306 page-oriented layout
+- Public drawing primitives
+- Clipping management
+- Algorithm instantiation
+- Pixel plotting callback generation
 
-Future layouts may include:
+Current primitives:
 
-- Linear monochrome
-- RGB565
-- RGB888
-- Grayscale formats
+- Glow_Pixel
+- Glow_Line
+- Glow_Rectangle
+- Glow_Filled_Rectangle
+
+Future primitives:
+
+- Glow_Circle
+- Glow_Filled_Circle
+- Glow_Ellipse
+- Glow_Filled_Ellipse
+- Glow_Triangle
+- Glow_Filled_Triangle
 
 ---
 
@@ -179,44 +244,48 @@ Future layouts may include:
 
 Provides statically allocated pixel storage.
 
-The framebuffer owns the display memory representation while remaining unaware of display controllers, transport hardware, or layout-specific coordinate mapping.
-
 Responsibilities include:
 
 - Pixel storage
 - Pixel updates
 - Buffer clearing
-- Delegating coordinate mapping to a layout package
+- Delegating coordinate mapping to Layout packages
+
+The framebuffer has no knowledge of controllers or hardware communication.
 
 ---
 
-## Glyph.Canvas
+## Glyph.Layouts
 
-Provides the public graphics API.
+Layouts describe how pixels are arranged in framebuffer memory.
 
-The Canvas coordinates graphics algorithms and framebuffer operations to expose a simple drawing interface.
+A layout converts logical `(X, Y)` coordinates into memory locations without any knowledge of display controllers or transport hardware.
 
-Current public primitives include:
+Current implementation:
 
-- `Glow_Pixel`
-- `Glow_Line`
+- SSD1306 page layout
 
-Future primitives will be implemented on top of these core operations.
+Future layouts:
+
+- Linear monochrome
+- RGB565
+- RGB888
+- Grayscale
 
 ---
 
 ## Glyph.Controllers
 
-Implements display controller protocols.
-
-Controller packages understand how to communicate with a specific display controller but have no knowledge of the underlying hardware peripheral.
+Controller packages understand the protocol of a specific display controller.
 
 Responsibilities include:
 
 - Display initialization
 - Command encoding
-- Framebuffer flushing
 - Display configuration
+- Framebuffer flushing
+
+Controllers never implement graphics algorithms.
 
 ---
 
@@ -224,23 +293,26 @@ Responsibilities include:
 
 Defines the hardware communication interface.
 
-Transport implementations are supplied by the application and bridge Glyph to platform-specific peripherals such as I²C or SPI.
+Applications provide transport implementations that bridge Glyph to platform-specific peripherals such as:
 
-Glyph itself never communicates directly with hardware peripherals.
+- I²C
+- SPI
+
+Glyph never communicates directly with hardware peripherals.
 
 ---
 
 ## Glyph.Displays
 
-Provides ready-to-use display compositions.
+A Display composes:
 
-A Display combines:
-
-- Framebuffer
 - Canvas
+- Framebuffer
 - Controller
 
-into a single object that applications can instantiate with minimal configuration.
+into a single object that applications instantiate.
+
+This provides a simple high-level interface while preserving separation between layers.
 
 ---
 
@@ -266,8 +338,9 @@ Glyph follows a strict one-way dependency model.
              Displays
 
 Controllers depend on:
-- Framebuffer
-- Transport
+
+• Framebuffer
+• Transport
 ```
 
 No lower layer may depend on a higher layer.
@@ -276,7 +349,7 @@ No lower layer may depend on a higher layer.
 
 # ✦ Architectural Constraints
 
-The following constraints apply to every package in Glyph.
+The following rules apply throughout the framework.
 
 ## Hardware Independence
 
@@ -302,45 +375,71 @@ All memory is allocated statically or on the stack through Ada language features
 
 Every package has one clearly defined responsibility.
 
-- Graphics algorithms never know about display controllers.
-- Layouts never know about framebuffer storage.
-- Framebuffers never know about display memory layouts.
-- Controllers never know about drawing algorithms.
-- Transport implementations never know about graphics primitives.
+Examples:
+
+- Algorithms never know about controllers.
+- Controllers never know about drawing primitives.
+- Layouts never know about transport hardware.
+- Transport never knows about graphics algorithms.
 
 ---
 
 ## Composition over Coupling
 
-Complex functionality is built by composing independent packages rather than tightly coupling responsibilities.
+Complex functionality is built by composing small, reusable packages instead of tightly coupling responsibilities.
 
-This approach improves portability, maintainability, and testability.
+This improves:
+
+- Portability
+- Maintainability
+- Testability
+- Extensibility
 
 ---
 
 # ✦ Supported Platform
 
-Current development target:
+Current reference platform:
 
-- RP2040 (Vicharak Shrike-Lite)
+- RP2040
 - SSD1306 128×64 OLED
 - I²C transport
 
-A complete reference implementation is available in the **`rp2040_example/`** project included in this repository.
+A complete reference implementation is available in **`rp2040_example/`**.
 
 ---
 
 # ✦ Future Architecture
 
-The current architecture provides a foundation for future capabilities, including:
+The current architecture provides a foundation for future capabilities.
 
-- Additional drawing primitives
-- Bitmap and vector fonts
+## Graphics
+
+- Circle primitives
+- Filled circles
+- Ellipses
+- Filled ellipses
+- Triangles
+- Filled triangles
+
+## Rendering
+
+- Partial display updates
+- Dirty rectangle tracking
+- Region clipping
+- Optimized framebuffer flushing
+
+## Text & Images
+
+- Bitmap fonts
+- UTF-8 rendering
 - Image rendering
+
+## Hardware
+
+- Additional display controllers
+- SPI transport
 - Multiple framebuffer layouts
 - Multiple pixel formats
-- Additional display controllers
-- Hardware acceleration where available
-- Lightweight embedded UI widgets
 
-These additions will build upon the existing architecture without changing the core layering principles.
+These additions will build upon the existing architecture without changing Glyph's core layering principles.
