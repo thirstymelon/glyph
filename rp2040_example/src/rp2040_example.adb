@@ -16,11 +16,12 @@ with Glue;
 
 procedure Rp2040_Example is
 
-   --  Vicharak Shrike-Lite Left Header I2C0 Pins:
+   --  Vicharak Shrike-Lite
    --  IO8 (RP_IO8) = I2C0 SDA, IO9 (RP_IO9) = I2C0 SCL
-   Port : RP.I2C_Master.I2C_Master_Port renames RP.Device.I2CM_0;
-   SDA  : RP.GPIO.GPIO_Point renames Pico.GP8;
-   SCL  : RP.GPIO.GPIO_Point renames Pico.GP9;
+   --  Currently configured for generic RPI Pico (I2CM_1, GP2, GP3)
+   Port : RP.I2C_Master.I2C_Master_Port renames RP.Device.I2CM_1;
+   SDA  : RP.GPIO.GPIO_Point renames Pico.GP2;
+   SCL  : RP.GPIO.GPIO_Point renames Pico.GP3;
 
    I2C_Bus : aliased Glue.Pico_I2C_Transport (Port_Ptr => Port'Access);
    OLED    : Glyph.Displays.SSD1306_128x64_I2C.Device (Bus => I2C_Bus'Access);

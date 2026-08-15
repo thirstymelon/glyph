@@ -29,3 +29,6 @@ build/
 *.dll
 *.dylib
 *.exe
+
+wokwi.toml
+diagram.json
