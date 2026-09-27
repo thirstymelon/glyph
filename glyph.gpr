@@ -1,3 +1,5 @@
+with "config/glyph_config.gpr";
+
 project Glyph is
 
    for Source_Dirs use ("src/**");

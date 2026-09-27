@@ -9,3 +9,6 @@ maintainers = ["Lokesh Panditi <lokesh.panditi.29@gmail.com>"]
 maintainers-logins = ["thirstymelon"]
 
 tags = ["graphics", "embedded", "oled", "display", "2d", "rp2040"]
+
+[[depends-on]]
+hal = "^1.0.0"
