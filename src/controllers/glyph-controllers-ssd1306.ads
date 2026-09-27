@@ -1,24 +1,21 @@
-------------------------------------------------------------------------------
---  Glyph.Controllers.SSD1306
---
---  SSD1306 OLED controller implementation spec.
-------------------------------------------------------------------------------
-
-with Glyph.Transports;
-with Glyph.Framebuffer;
+with HAL.I2C;
+with Glyph.Transport;
 
 package Glyph.Controllers.SSD1306 is
 
-   generic
-      with package FB is new Glyph.Framebuffer (<>);
-   package Driver is
+   Default_I2C_Address : constant HAL.I2C.I2C_Address := 16#3C#;
 
-      type Controller (Bus : access Glyph.Transports.Transport'Class) is tagged limited null record;
+   type Controller (Address : HAL.I2C.I2C_Address := Default_I2C_Address) is
+     tagged limited record
+      Initialized : Boolean := False;
+   end record;
 
-      procedure Initialize (Self : in out Controller);
+   procedure Initialize
+     (Self : in out Controller; Bus : in out HAL.I2C.I2C_Port'Class);
 
-      procedure Flush (Self : in out Controller; Buffer : FB.Framebuffer);
-
-   end Driver;
+   procedure Flush
+     (Self : in out Controller;
+      Bus  : in out HAL.I2C.I2C_Port'Class;
+      Data : Glyph.Transport.Byte_Array);
 
 end Glyph.Controllers.SSD1306;

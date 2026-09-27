@@ -2,9 +2,9 @@
 
 Glyph is a lightweight, portable graphics framework for bare-metal and embedded systems, written in **Ada 2022**.
 
-Glyph is completely independent of any BSP, HAL, SDK, or RTOS, making it portable across embedded platforms.
+Development currently targets the **Vicharak Shrike-Lite (RP2040)** with an **SSD1306 128×64 OLED** over **I²C**. **Pico_BSP is directly integrated into Glyph**, so users no longer need to write custom transport glue code—simply initialize your hardware bus and pass it directly to `OLED.Init`.
 
-Development currently targets the **Vicharak Shrike-Lite (RP2040)** with an **SSD1306 128×64 OLED** over **I²C**, while the architecture is designed to support additional display controllers, transports, memory layouts, and pixel formats as the framework evolves.
+The architecture is built on **Generic Static Composition**, allowing support for any display controller, transport bus, memory layout, resolution, and pixel format with zero heap allocation.
 
 ---
 
@@ -43,13 +43,13 @@ The goal is to learn by building while creating a useful graphics framework for 
 Glyph is built around a small set of core principles:
 
 - **Ada 2022** throughout the entire codebase
-- **Hardware-independent graphics core**
 - **Zero dynamic memory allocation**
 - **Deterministic execution**
 - **Strong type safety**
 - **Layered architecture**
 - **Reusable graphics algorithms**
-- **Portable across embedded platforms**
+- **Direct BSP integration for ease of use**
+- **Extensible display and controller abstractions**
 
 For a detailed explanation of the framework architecture, see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
 
@@ -59,18 +59,28 @@ For a detailed explanation of the framework architecture, see **[ARCHITECTURE.md
 
 Glyph currently provides:
 
-- Pixel drawing
-- Line drawing
-- Rectangle drawing
-- Filled rectangle drawing
-- Liang–Barsky line clipping
-- Bresenham integer line rasterization
-- Rectangle rasterization algorithms
-- Static framebuffer
-- Display memory layout abstraction
-- SSD1306 display controller
-- High-level display abstraction
-- Hardware-independent transport interface
+- Pixel drawing (`Paint_Pixel`)
+- Line drawing (`Paint_Line`)
+- Rectangle outline drawing (`Paint_Rectangle`)
+- Filled rectangle drawing (`Paint_Filled_Rectangle`)
+- Circle outline & sector drawing (`Paint_Circle`)
+- Filled circle & filled sector drawing (`Paint_Filled_Circle`)
+- Arc curve drawing (`Paint_Arc`)
+- Half-circle drawing (`Paint_Half_Circle`, `Paint_Filled_Half_Circle`)
+- Triangle outline drawing (`Paint_Triangle`)
+- Filled triangle drawing (`Paint_Filled_Triangle`)
+- Simple flat integer drawing APIs (`Paint_Circle (100, 20, 12)`, etc.)
+- Cohen–Sutherland line clipping with integer outcodes
+- Bresenham integer line rasterization with fast orthogonal bypass
+- Axis-Aligned Bounding Box (AABB) rectangle rasterization
+- Midpoint circle rasterization & scanline filled circle rasterization
+- $O(1)$ cross-product vector inclusion testing for arbitrary angular sectors
+- Scanline filled triangle rasterization
+- Parameterized generic monochrome framebuffers (`Glyph.Canvas.Generic_Mono`)
+- Generic display composition engine (`Glyph.Display.Generic_Display`)
+- Universal HAL.I2C transport bridge (`Glyph.Transport.I2C`)
+- SSD1306 OLED display controller with configurable I2C address
+- High-level display abstraction (`OLED.Init`, `OLED.Render`)
 
 ---
 
@@ -80,34 +90,43 @@ Glyph currently provides:
 
 - ☑ Core project structure
 - ☑ Alire integration
-- ☑ Strong scalar and geometric types (`Point`, `Line`, `Rect`, etc.)
-- ☑ Liang–Barsky line clipping
+- ☑ Strong scalar and geometric types (`Point`, `Line`, `Rectangle`, `Circle`, `Triangle`, `Size`, `Coordinate`, `Angle`, `Hemisphere`)
+- ☑ Simple flat integer drawing APIs
+- ☑ Cohen–Sutherland line clipping
 - ☑ Bresenham line rasterization
+- ☑ Fast orthogonal horizontal and vertical line bypass
 - ☑ Rectangle primitive
 - ☑ Filled rectangle primitive
+- ☑ Circle primitive
+- ☑ Filled circle primitive
+- ☑ Arc primitive
+- ☑ Sector & pie wedge primitive
+- ☑ Half-circle primitive
+- ☑ Triangle primitive
+- ☑ Filled triangle primitive
 - ☑ Generic graphics algorithm framework
-- ☑ Static framebuffer implementation
-- ☑ Memory layout abstraction
-- ☑ SSD1306 page layout
-- ☑ SSD1306 display controller
-- ☑ Transport abstraction
+- ☑ Parameterized static monochrome framebuffer (`Generic_Mono`)
+- ☑ Generic static display composition engine (`Generic_Display`)
+- ☑ SSD1306 display RAM stream layout & controller protocol
+- ☑ Universal HAL.I2C transport bridge
 - ☑ High-level display abstraction
-- ☑ RP2040 reference application
-- ☑ Verified on physical RP2040 + SSD1306 hardware
+- ☑ RP2040 reference application with hardware timer (`RP.Device.Timer`)
+- ☑ Verified on physical RP2040 (Vicharak Shrike-Lite) + SSD1306 hardware
 
 ## Planned
 
 ### Graphics
 
-- ☐ Circle
-- ☐ Filled Circle
 - ☐ Ellipse
 - ☐ Filled Ellipse
-- ☐ Triangle
-- ☐ Filled Triangle
+- ☐ Rounded Rectangle
+- ☐ Polygon filling
+- ☐ Bézier curves
 
 ### Rendering
 
+- ☐ Banded / chunked rendering for large RGB displays
+- ☐ Direct streaming mode
 - ☐ Partial display updates
 - ☐ Dirty rectangle tracking
 - ☐ Region clipping
@@ -117,13 +136,13 @@ Glyph currently provides:
 
 - ☐ Bitmap fonts
 - ☐ UTF-8 text rendering
-- ☐ Image rendering
+- ☐ Image / bitmap rendering
 
 ### Hardware
 
 - ☐ SPI transport
-- ☐ Additional display controllers
-- ☐ Additional framebuffer layouts
+- ☐ Additional display controllers (SH1106, ST7789, ILI9341, IL0373 E-Ink)
+- ☐ Additional framebuffer layouts (RGB565, Grayscale)
 - ☐ Additional pixel formats
 
 ### UI
@@ -132,19 +151,18 @@ Glyph currently provides:
 
 ---
 
-# ✦ RP2040 Example
+# ✦ Reference Example
 
-A complete reference application is included in **`rp2040_example/`**.
+A complete reference application is included in **`example/`**.
 
 The example demonstrates:
 
-- RP2040 initialization
-- Pico_BSP transport implementation
-- SSD1306 initialization
-- Drawing primitives
-- Rendering to the display
-
-It also illustrates the intended separation between Glyph and platform-specific code by implementing the transport layer as application glue.
+- RP2040 clock & GPIO initialization
+- I²C configuration (GP8 SDA, GP9 SCL on I2C0)
+- Hardware timer initialization (`RP.Device.Timer.Enable`)
+- Passing the hardware I2C port directly to `OLED.Init` without custom glue code
+- Drawing primitives (`Paint_Rectangle`, `Paint_Line`, `Paint_Filled_Rectangle`, `Paint_Pixel`, `Paint_Circle`, `Paint_Filled_Circle`, `Paint_Arc`, `Paint_Half_Circle`, `Paint_Filled_Half_Circle`, `Paint_Triangle`, `Paint_Filled_Triangle`)
+- Real-time animated cyber dashboard rendering to the display
 
 ---
 
@@ -152,56 +170,81 @@ It also illustrates the intended separation between Glyph and platform-specific 
 
 ```text
 glyph/
-├── rp2040_example/
+├── example/
+│   ├── config/
+│   ├── src/
+│   │   └── example.adb
+│   ├── alire.toml
+│   └── example.gpr
 ├── src/
 │   ├── algorithms/
-│   │   ├── bresenham/
-│   │   ├── liang_barsky/
-│   │   └── rectangle/
+│   │   ├── glyph-algorithms.ads
+│   │   ├── glyph-algorithms-clipping.ads / .adb
+│   │   ├── glyph-algorithms-lines.ads / .adb
+│   │   ├── glyph-algorithms-rectangle.ads / .adb
+│   │   ├── glyph-algorithms-circle.ads / .adb
+│   │   └── glyph-algorithms-triangle.ads / .adb
 │   ├── canvas/
-│   │   └── rectangle/
+│   │   ├── glyph-canvas.ads
+│   │   ├── generic_mono/
+│   │   │   ├── glyph-canvas-generic_mono.ads
+│   │   │   └── glyph-canvas-generic_mono.adb
+│   │   └── c128x64_mono/
+│   │       └── glyph-canvas-c128x64_mono.ads
 │   ├── controllers/
-│   ├── displays/
-│   ├── framebuffer/
-│   ├── layouts/
-│   ├── pixel_formats/
+│   │   ├── glyph-controllers.ads
+│   │   ├── glyph-controllers-ssd1306.ads
+│   │   └── glyph-controllers-ssd1306.adb
+│   ├── display/
+│   │   ├── glyph-display.ads
+│   │   ├── glyph-display.adb
+│   │   └── generic/
+│   │       ├── glyph-display-generic_display.ads
+│   │       └── glyph-display-generic_display.adb
 │   ├── transport/
+│   │   ├── glyph-transport.ads
+│   │   ├── i2c/
+│   │   │   ├── glyph-transport-i2c.ads
+│   │   │   └── glyph-transport-i2c.adb
+│   │   └── pico/
+│   │       ├── glyph-transport-pico.ads
+│   │       └── glyph-transport-pico.adb
 │   ├── glyph.ads
-│   └── glyph-types.ads
-├── config/
+│   ├── glyph-types.ads
+│   └── glyph-colors.ads
 ├── ARCHITECTURE.md
 ├── README.md
 ├── alire.toml
-└── glyph.gpr
+├── glyph.gpr
+└── LICENSE
 ```
 
 ---
 
 # ✦ Goals
 
-Glyph aims to become a reusable graphics framework for embedded Ada systems by providing:
+Glyph aims to provide:
 
-- Clean and strongly typed APIs
-- Hardware-independent graphics primitives
+- Clean and strongly typed Ada 2022 APIs
+- Embedded 2D graphics primitives
 - Efficient rendering algorithms
-- Portable display abstractions
-- Static memory usage
-- Deterministic execution
+- Direct, hassle-free board and driver integration
+- Static memory usage with zero heap allocation
+- Deterministic execution on bare-metal microcontrollers
 
 ---
 
 # ✦ Non-Goals
 
-Glyph is **not** intended to provide:
+Glyph is **not** a desktop GUI framework and is **not** intended to provide:
 
-- Desktop GUI frameworks
+- Desktop window management or OS GUI widgets
 - GPU acceleration
 - Dynamic memory allocation
-- Operating system integration
-- Window management
-- Scene graphs
+- Heavy runtime scene graphs
+- Operating system event loops
 
-The primary focus remains small embedded systems and microcontrollers.
+The sole focus is bare-metal embedded systems and microcontrollers.
 
 ---
 

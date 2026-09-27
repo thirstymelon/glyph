@@ -1,5 +1,5 @@
 name = "glyph"
-version = "0.3.0"
+version = "1.0.0"
 description = "Portable graphics framework for embedded Ada systems"
 licenses = "Apache-2.0"
 website = "https://github.com/thirstymelon/glyph"
@@ -8,4 +8,9 @@ authors = ["Lokesh Panditi <lokesh.panditi.29@gmail.com>"]
 maintainers = ["Lokesh Panditi <lokesh.panditi.29@gmail.com>"]
 maintainers-logins = ["thirstymelon"]
 
-tags = ["graphics", "embedded", "oled", "ssd1306", "rp2040"]
+tags = ["graphics", "embedded", "oled", "display", "2d", "rp2040"]
+
+[[depends-on]]
+
+[[depends-on]]
+transport_kit = "~0.1.0"

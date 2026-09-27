@@ -1,8 +1,2 @@
-------------------------------------------------------------------------------
---  Glyph.Controllers
---
---  Parent package for display controller drivers.
-------------------------------------------------------------------------------
-
 package Glyph.Controllers is
 end Glyph.Controllers;
