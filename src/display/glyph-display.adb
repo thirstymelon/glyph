@@ -2,6 +2,8 @@ with Glyph.Colors;
 
 package body Glyph.Display is
 
+   use type Glyph.Transport.Byte;
+
    Transmit_Buffer : Glyph.Transport.Byte_Array (1 .. 1025);
 
    function Get_Display (Kind : Display_Type) return Display_T is
@@ -129,9 +131,11 @@ package body Glyph.Display is
       Col_End    : Natural;
       Page_Start : Natural;
       Page_End   : Natural;
-      Data       : Glyph.Transport.Byte_Array) is
+      Data       : Glyph.Transport.Byte_Array)
+   is
+      Packet : Glyph.Transport.Byte_Array (1 .. Data'Length + 1);
    begin
-      if Self.Bus /= null then
+      if Self.Bus /= null and then Data'Length > 0 then
          Self.Controller.Set_Address_Window
            (Bus        => Self.Bus.all,
             Col_Start  => Col_Start,
@@ -139,7 +143,13 @@ package body Glyph.Display is
             Page_Start => Page_Start,
             Page_End   => Page_End);
 
-         Self.Controller.Write_Data (Bus => Self.Bus.all, Data => Data);
+         if Data (Data'First) = 16#40# then
+            Self.Controller.Write_Data (Bus => Self.Bus.all, Data => Data);
+         else
+            Packet (1) := 16#40#;
+            Packet (2 .. Packet'Last) := Data;
+            Self.Controller.Write_Data (Bus => Self.Bus.all, Data => Packet);
+         end if;
       end if;
    end Stream_Data;
 

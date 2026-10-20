@@ -5,6 +5,7 @@ with RP.Clock;
 with Pico;
 
 with Glyph.Display;
+with Glyph.Colors;
 
 procedure Example is
 
@@ -14,14 +15,29 @@ procedure Example is
    SCL : RP.GPIO.GPIO_Point renames Pico.GP9;
 
    --  Instantiate a standard 128x64 SSD1306 display
+   --  (standard Framebuffer mode by default)
    OLED : Glyph.Display.Display_T :=
      Glyph.Display.Get_Display (Glyph.Display.SSD1306_128x64_I2C);
 
-   --  Animation state
-   Disk_Angle : Natural := 0;
-   Progress   : Natural := 12;
-   Step       : Integer := 1;
-   Frame      : Natural := 0;
+   --  Menu Selection: Tile 0 is highlighted
+   --  (0: Media, 1: Display, 2: Wifi, 3: Power)
+   Selected_Tile : constant Natural := 0;
+
+   --  Bento Tile Geometry Definition
+   type Tile_Bounds is record
+      X0, Y0 : Integer;
+      W, H   : Integer;
+   end record;
+
+   type Tile_Array is array (0 .. 3) of Tile_Bounds;
+   Grid : constant Tile_Array :=
+     ((X0 => 3, Y0 => 2, W => 59, H => 28),   --  Tile 0: Top-Left
+      (X0 => 65, Y0 => 2, W => 60, H => 28),   --  Tile 1: Top-Right
+      (X0 => 3, Y0 => 34, W => 59, H => 28),   --  Tile 2: Bottom-Left
+      (X0 => 65, Y0 => 34, W => 60, H => 28));  --  Tile 3: Bottom-Right
+
+   Is_Selected : Boolean;
+   Color_Fg    : Glyph.Colors.Monochrome;
 
 begin
 
@@ -39,70 +55,138 @@ begin
    --  Initialize display controller over I2C
    OLED.Init (I2C'Access);
 
-   loop
-      --  1. Clear canvas for next frame
-      OLED.Canvas.Clear;
+   --  1. Clear Framebuffer
+   OLED.Canvas.Clear;
 
-      --  2. Main Hero Element: Large Rotating Vinyl Record (Center: 32, 32)
-      --  Outer rim & concentric sound grooves (R: 28, 23, 18, 13)
-      OLED.Canvas.Paint_Circle (32, 32, 28);
-      OLED.Canvas.Paint_Circle (32, 32, 23);
-      OLED.Canvas.Paint_Circle (32, 32, 18);
-      OLED.Canvas.Paint_Circle (32, 32, 13);
+   --  =================================================================
+   --  2. Render Bento Box App Menu (2x2 Grid, 128x64)
+   --  =================================================================
+   for Idx in Grid'Range loop
+      Is_Selected := (Idx = Selected_Tile);
 
-      --  Dual dynamic glossy sheen arcs rotating with the record
-      OLED.Canvas.Paint_Arc
-        (Center_X    => 32,
-         Center_Y    => 32,
-         Radius      => 21,
-         Start_Angle => Disk_Angle,
-         End_Angle   => (Disk_Angle + 45) mod 360);
+      if Is_Selected then
+         --  Menu Selector Highlighter: Solid filled inverted card
+         OLED.Canvas.Paint_Filled_Rectangle
+           (Grid (Idx).X0, Grid (Idx).Y0, Grid (Idx).W, Grid (Idx).H);
 
-      OLED.Canvas.Paint_Arc
-        (Center_X    => 32,
-         Center_Y    => 32,
-         Radius      => 16,
-         Start_Angle => (Disk_Angle + 180) mod 360,
-         End_Angle   => (Disk_Angle + 225) mod 360);
+         --  Selector Indicator Dot (Top-Right of active tile)
+         OLED.Canvas.Paint_Pixel
+           (Grid (Idx).X0 + Grid (Idx).W - 6,
+            Grid (Idx).Y0 + 6,
+            Glyph.Colors.Off);
+         OLED.Canvas.Paint_Pixel
+           (Grid (Idx).X0 + Grid (Idx).W - 5,
+            Grid (Idx).Y0 + 6,
+            Glyph.Colors.Off);
+         OLED.Canvas.Paint_Pixel
+           (Grid (Idx).X0 + Grid (Idx).W - 6,
+            Grid (Idx).Y0 + 7,
+            Glyph.Colors.Off);
+         OLED.Canvas.Paint_Pixel
+           (Grid (Idx).X0 + Grid (Idx).W - 5,
+            Grid (Idx).Y0 + 7,
+            Glyph.Colors.Off);
 
-      --  Center record label & spindle hole
-      OLED.Canvas.Paint_Circle (32, 32, 8);
-      OLED.Canvas.Paint_Filled_Circle (32, 32, 3);
-      OLED.Canvas.Paint_Pixel (32, 32);
+         Color_Fg := Glyph.Colors.Off;
+      else
+         --  Unselected Bento Card: Minimalist 1px outline
+         OLED.Canvas.Paint_Rectangle
+           (Grid (Idx).X0, Grid (Idx).Y0, Grid (Idx).W, Grid (Idx).H);
 
-      --  Delicate tonearm resting on the record groove
-      OLED.Canvas.Paint_Filled_Circle (61, 6, 2);
-      OLED.Canvas.Paint_Line (61, 6, 54, 18);
-      OLED.Canvas.Paint_Line (54, 18, 47, 24);
-
-      --  3. Right Side: Minimal Track Typography
-      OLED.Canvas.Paint_Text (67, 13, "Sailor");
-      OLED.Canvas.Paint_Text (67, 23, "Song");
-      OLED.Canvas.Paint_Text (67, 35, "Gigi Perez");
-
-      --  4. Playback State & Progress Bar
-      OLED.Canvas.Paint_Filled_Triangle (67, 47, 67, 53, 72, 50);
-      OLED.Canvas.Paint_Text (76, 47, "1:24");
-
-      --  Slim progress line with scrubber dot
-      OLED.Canvas.Paint_Line (67, 57, 122, 57);
-      OLED.Canvas.Paint_Filled_Circle (67 + Progress, 57, 2);
-
-      --  5. Advance animation state
-      Disk_Angle := (Disk_Angle + 8) mod 360;
-
-      if Frame mod 4 = 0 then
-         Progress := Progress + Step;
-         if Progress >= 54 or else Progress <= 2 then
-            Step := -Step;
-         end if;
+         Color_Fg := Glyph.Colors.On;
       end if;
 
-      Frame := Frame + 1;
+      case Idx is
+         when 0      =>
+            --  TILE 0: AUDIO / MEDIA
+            OLED.Canvas.Paint_Text
+              (Grid (Idx).X0 + 5,
+               Grid (Idx).Y0 + 5,
+               "MEDIA",
+               Color => Color_Fg);
 
-      --  6. Transmit frame to OLED display
-      OLED.Render;
-      RP.Device.Timer.Delay_Milliseconds (20);
+            --  Miniature play glyph ▶
+            for Y_Off in 0 .. 6 loop
+               for X_Off in 0 .. (if Y_Off <= 3 then Y_Off else 6 - Y_Off) loop
+                  OLED.Canvas.Paint_Pixel
+                    (Grid (Idx).X0 + 5 + X_Off,
+                     Grid (Idx).Y0 + 16 + Y_Off,
+                     Color_Fg);
+               end loop;
+            end loop;
+
+            OLED.Canvas.Paint_Text
+              (Grid (Idx).X0 + 14,
+               Grid (Idx).Y0 + 16,
+               "PLAYING",
+               Color => Color_Fg);
+
+         when 1      =>
+            --  TILE 1: DISPLAY & BRIGHTNESS
+            OLED.Canvas.Paint_Text
+              (Grid (Idx).X0 + 5,
+               Grid (Idx).Y0 + 5,
+               "DISPLAY",
+               Color => Color_Fg);
+            OLED.Canvas.Paint_Text
+              (Grid (Idx).X0 + 5,
+               Grid (Idx).Y0 + 16,
+               "80%",
+               Color => Color_Fg);
+
+            --  Minimalist slider gauge
+            OLED.Canvas.Paint_Rectangle
+              (Grid (Idx).X0 + 28, Grid (Idx).Y0 + 17, 26, 6);
+            OLED.Canvas.Paint_Filled_Rectangle
+              (Grid (Idx).X0 + 29, Grid (Idx).Y0 + 18, 20, 4);
+
+         when 2      =>
+            --  TILE 2: NETWORK / WIFI
+            OLED.Canvas.Paint_Text
+              (Grid (Idx).X0 + 5,
+               Grid (Idx).Y0 + 5,
+               "WIFI",
+               Color => Color_Fg);
+            OLED.Canvas.Paint_Text
+              (Grid (Idx).X0 + 5,
+               Grid (Idx).Y0 + 16,
+               "HOME-5G",
+               Color => Color_Fg);
+
+            --  Connection indicator dot
+            OLED.Canvas.Paint_Filled_Circle
+              (Grid (Idx).X0 + Grid (Idx).W - 7, Grid (Idx).Y0 + 19, 2);
+
+         when others =>
+            --  TILE 3: POWER / BATTERY
+            OLED.Canvas.Paint_Text
+              (Grid (Idx).X0 + 5,
+               Grid (Idx).Y0 + 5,
+               "POWER",
+               Color => Color_Fg);
+
+            --  Battery shell & fill
+            OLED.Canvas.Paint_Rectangle
+              (Grid (Idx).X0 + 5, Grid (Idx).Y0 + 16, 18, 8);
+            OLED.Canvas.Paint_Filled_Rectangle
+              (Grid (Idx).X0 + 23, Grid (Idx).Y0 + 18, 2, 4);
+            OLED.Canvas.Paint_Filled_Rectangle
+              (Grid (Idx).X0 + 7, Grid (Idx).Y0 + 18, 13, 4);
+
+            OLED.Canvas.Paint_Text
+              (Grid (Idx).X0 + 28,
+               Grid (Idx).Y0 + 16,
+               "94%",
+               Color => Color_Fg);
+      end case;
+   end loop;
+
+   --  3. Transmit Complete Framebuffer to Display
+   OLED.Render;
+
+   --  Static UI: Idle sleep without any animation
+   loop
+      RP.Device.Timer.Delay_Milliseconds (1000);
    end loop;
 
 end Example;
