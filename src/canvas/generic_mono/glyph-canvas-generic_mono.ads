@@ -1,9 +1,10 @@
 with Glyph.Types;
 with Glyph.Colors;
 with Glyph.Transport;
+with Glyph.Fonts;
 
 generic
-   Width  : Positive;
+   Width : Positive;
    Height : Positive;
 package Glyph.Canvas.Generic_Mono is
 
@@ -13,8 +14,7 @@ package Glyph.Canvas.Generic_Mono is
    Total_Pages : constant Positive := (Height + 7) / 8;
    Stream_Size : constant Positive := Width * Total_Pages;
 
-   type Framebuffer_T is
-     array (X_Range, Y_Range) of Glyph.Colors.Monochrome
+   type Framebuffer_T is array (X_Range, Y_Range) of Glyph.Colors.Monochrome
    with Pack;
 
    type Instance is tagged limited record
@@ -24,77 +24,66 @@ package Glyph.Canvas.Generic_Mono is
    procedure Clear (Self : in out Instance);
 
    procedure Paint_Pixel
-     (Self : in out Instance;
-      X    : Integer;
-      Y    : Integer);
+     (Self  : in out Instance;
+      X     : Integer;
+      Y     : Integer;
+      Color : Glyph.Colors.Monochrome := Glyph.Colors.On);
 
    procedure Paint_Line
-     (Self   : in out Instance;
-      X1, Y1 : Integer;
-      X2, Y2 : Integer);
+     (Self : in out Instance; X1, Y1 : Integer; X2, Y2 : Integer);
 
-   procedure Paint_Line
-     (Self : in out Instance;
-      Line : Glyph.Types.Line);
+   procedure Paint_Line (Self : in out Instance; Line : Glyph.Types.Line);
 
    procedure Paint_Rectangle
-     (Self          : in out Instance;
-      X, Y          : Integer;
-      Width, Height : Integer);
+     (Self : in out Instance; X, Y : Integer; Width, Height : Integer);
 
    procedure Paint_Rectangle
-     (Self : in out Instance;
-      Rect : Glyph.Types.Rectangle);
+     (Self : in out Instance; Rect : Glyph.Types.Rectangle);
 
    procedure Paint_Filled_Rectangle
-     (Self          : in out Instance;
-      X, Y          : Integer;
-      Width, Height : Integer);
+     (Self : in out Instance; X, Y : Integer; Width, Height : Integer);
 
    procedure Paint_Filled_Rectangle
-     (Self : in out Instance;
-      Rect : Glyph.Types.Rectangle);
+     (Self : in out Instance; Rect : Glyph.Types.Rectangle);
 
    procedure Paint_Circle
-     (Self              : in out Instance;
+     (Self               : in out Instance;
       Center_X, Center_Y : Integer;
-      Radius            : Integer;
-      Start_Angle       : Integer := 0;
-      End_Angle         : Integer := 360);
+      Radius             : Integer;
+      Start_Angle        : Integer := 0;
+      End_Angle          : Integer := 360);
 
    procedure Paint_Circle
-     (Self   : in out Instance;
-      Circle : Glyph.Types.Circle);
+     (Self : in out Instance; Circle : Glyph.Types.Circle);
 
    procedure Paint_Filled_Circle
-     (Self              : in out Instance;
+     (Self               : in out Instance;
       Center_X, Center_Y : Integer;
-      Radius            : Integer;
-      Start_Angle       : Integer := 0;
-      End_Angle         : Integer := 360);
+      Radius             : Integer;
+      Start_Angle        : Integer := 0;
+      End_Angle          : Integer := 360);
 
    procedure Paint_Filled_Circle
-     (Self   : in out Instance;
-      Circle : Glyph.Types.Circle);
+     (Self : in out Instance; Circle : Glyph.Types.Circle);
 
    procedure Paint_Arc
-     (Self              : in out Instance;
+     (Self               : in out Instance;
       Center_X, Center_Y : Integer;
-      Radius            : Integer;
-      Start_Angle       : Integer := 0;
-      End_Angle         : Integer := 360);
+      Radius             : Integer;
+      Start_Angle        : Integer := 0;
+      End_Angle          : Integer := 360);
 
    procedure Paint_Half_Circle
-     (Self              : in out Instance;
+     (Self               : in out Instance;
       Center_X, Center_Y : Integer;
-      Radius            : Integer;
-      Side              : Glyph.Types.Hemisphere := Glyph.Types.Top);
+      Radius             : Integer;
+      Side               : Glyph.Types.Hemisphere := Glyph.Types.Top);
 
    procedure Paint_Filled_Half_Circle
-     (Self              : in out Instance;
+     (Self               : in out Instance;
       Center_X, Center_Y : Integer;
-      Radius            : Integer;
-      Side              : Glyph.Types.Hemisphere := Glyph.Types.Top);
+      Radius             : Integer;
+      Side               : Glyph.Types.Hemisphere := Glyph.Types.Top);
 
    procedure Paint_Triangle
      (Self   : in out Instance;
@@ -103,8 +92,7 @@ package Glyph.Canvas.Generic_Mono is
       X3, Y3 : Integer);
 
    procedure Paint_Triangle
-     (Self     : in out Instance;
-      Triangle : Glyph.Types.Triangle);
+     (Self : in out Instance; Triangle : Glyph.Types.Triangle);
 
    procedure Paint_Filled_Triangle
      (Self   : in out Instance;
@@ -113,8 +101,23 @@ package Glyph.Canvas.Generic_Mono is
       X3, Y3 : Integer);
 
    procedure Paint_Filled_Triangle
-     (Self     : in out Instance;
-      Triangle : Glyph.Types.Triangle);
+     (Self : in out Instance; Triangle : Glyph.Types.Triangle);
+
+   procedure Paint_Text
+     (Self  : in out Instance;
+      X, Y  : Integer;
+      Text  : String;
+      Font  : Glyph.Fonts.Font := Glyph.Fonts.Font_5x7;
+      Scale : Positive := 1;
+      Color : Glyph.Colors.Monochrome := Glyph.Colors.On);
+
+   procedure Paint_Text
+     (Self  : in out Instance;
+      X, Y  : Integer;
+      Char  : Character;
+      Font  : Glyph.Fonts.Font := Glyph.Fonts.Font_5x7;
+      Scale : Positive := 1;
+      Color : Glyph.Colors.Monochrome := Glyph.Colors.On);
 
    function Get_Pixel
      (Self : Instance; X : Natural; Y : Natural)

@@ -177,6 +177,7 @@ Glyph
 │
 ├── Types (Points, Lines, Rectangles, Circles, Triangles, Angles, Hemispheres)
 ├── Colors (Monochrome, Grayscale, RGB888)
+├── Fonts (Font Definition & 5x7 ASCII Bitmap Font)
 ├── Algorithms
 │   ├── Clipping (Cohen–Sutherland Line Clipping)
 │   ├── Lines (Bresenham & Fast Orthogonal)
@@ -221,6 +222,19 @@ These packages form the foundation of Glyph and have no dependencies on other Gl
 
 ---
 
+## Glyph.Fonts
+
+Defines bitmap font types, glyph bit layouts, and built-in embedded font definitions.
+
+Fonts are stored as compile-time constant static arrays in Flash/ROM with zero dynamic memory allocation.
+
+Includes:
+
+- `Glyph.Fonts.Font`: Font descriptor record (dimensions, character bounds, pointer to static glyph data)
+- `Glyph.Fonts.Font_5x7`: Standard 5×7 ASCII bitmap font (ASCII 32 ' ' through 126 '~')
+
+---
+
 ## Glyph.Algorithms
 
 Contains reusable, pure graphics algorithms.
@@ -258,7 +272,7 @@ It coordinates graphics algorithms with framebuffer operations while keeping dra
 
 Canvas is responsible for:
 
-- Public drawing primitives (`Paint_Pixel`, `Paint_Line`, `Paint_Rectangle`, `Paint_Filled_Rectangle`, `Paint_Circle`, `Paint_Filled_Circle`, `Paint_Arc`, `Paint_Half_Circle`, `Paint_Filled_Half_Circle`, `Paint_Triangle`, `Paint_Filled_Triangle`)
+- Public drawing primitives (`Paint_Pixel`, `Paint_Line`, `Paint_Rectangle`, `Paint_Filled_Rectangle`, `Paint_Circle`, `Paint_Filled_Circle`, `Paint_Arc`, `Paint_Half_Circle`, `Paint_Filled_Half_Circle`, `Paint_Triangle`, `Paint_Filled_Triangle`, `Paint_Text`)
 - Viewport boundary clipping management
 - Algorithm instantiation
 - Pixel plotting callback generation
@@ -319,6 +333,8 @@ A Display composes:
 into a single object that applications instantiate and control.
 
 `Glyph.Display.Generic_Display` provides static compile-time generic composition for any canvas, controller, and bus combination with zero heap overhead, while `Glyph.Display` provides a convenient ready-to-use facade.
+
+Applications can optionally configure transport modes via `OLED.Set_Transport_Mode (GDDRAM_Stream);` for direct zero-framebuffer streaming (`Stream_Text`, `Stream_Data`, `Stream_Clear`), with standard buffered `Framebuffer` mode remaining the default.
 
 ---
 

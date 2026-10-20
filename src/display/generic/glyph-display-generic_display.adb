@@ -1,8 +1,6 @@
 package body Glyph.Display.Generic_Display is
 
-   procedure Init
-     (Self : in out Display_T;
-      Bus  : access Bus_Type) is
+   procedure Init (Self : in out Display_T; Bus : access Bus_Type) is
    begin
       Self.Bus := Bus;
       if Bus /= null then

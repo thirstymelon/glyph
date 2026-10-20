@@ -50,12 +50,12 @@ package body Glyph.Algorithms.Lines is
 
             if E2 >= DY then
                Err := Err + DY;
-               X0  := Coordinate (Integer (X0) + SX);
+               X0 := Coordinate (Integer (X0) + SX);
             end if;
 
             if E2 <= DX then
                Err := Err + DX;
-               Y0  := Coordinate (Integer (Y0) + SY);
+               Y0 := Coordinate (Integer (Y0) + SY);
             end if;
          end loop;
       end;

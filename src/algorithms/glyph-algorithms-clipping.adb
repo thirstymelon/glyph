@@ -56,44 +56,48 @@ package body Glyph.Algorithms.Clipping is
 
             if (Out_Code and TOP) /= 0 then
                if P1.Y /= P0.Y then
-                  X := Coordinate
-                    (Long_Integer (P0.X) +
-                     (Long_Integer (P1.X) - Long_Integer (P0.X)) *
-                     (Long_Integer (Y_Min) - Long_Integer (P0.Y)) /
-                     (Long_Integer (P1.Y) - Long_Integer (P0.Y)));
+                  X :=
+                    Coordinate
+                      (Long_Integer (P0.X)
+                       + (Long_Integer (P1.X) - Long_Integer (P0.X))
+                         * (Long_Integer (Y_Min) - Long_Integer (P0.Y))
+                         / (Long_Integer (P1.Y) - Long_Integer (P0.Y)));
                else
                   X := P0.X;
                end if;
                Y := Y_Min;
             elsif (Out_Code and BOTTOM) /= 0 then
                if P1.Y /= P0.Y then
-                  X := Coordinate
-                    (Long_Integer (P0.X) +
-                     (Long_Integer (P1.X) - Long_Integer (P0.X)) *
-                     (Long_Integer (Y_Max) - Long_Integer (P0.Y)) /
-                     (Long_Integer (P1.Y) - Long_Integer (P0.Y)));
+                  X :=
+                    Coordinate
+                      (Long_Integer (P0.X)
+                       + (Long_Integer (P1.X) - Long_Integer (P0.X))
+                         * (Long_Integer (Y_Max) - Long_Integer (P0.Y))
+                         / (Long_Integer (P1.Y) - Long_Integer (P0.Y)));
                else
                   X := P0.X;
                end if;
                Y := Y_Max;
             elsif (Out_Code and RIGHT) /= 0 then
                if P1.X /= P0.X then
-                  Y := Coordinate
-                    (Long_Integer (P0.Y) +
-                     (Long_Integer (P1.Y) - Long_Integer (P0.Y)) *
-                     (Long_Integer (X_Max) - Long_Integer (P0.X)) /
-                     (Long_Integer (P1.X) - Long_Integer (P0.X)));
+                  Y :=
+                    Coordinate
+                      (Long_Integer (P0.Y)
+                       + (Long_Integer (P1.Y) - Long_Integer (P0.Y))
+                         * (Long_Integer (X_Max) - Long_Integer (P0.X))
+                         / (Long_Integer (P1.X) - Long_Integer (P0.X)));
                else
                   Y := P0.Y;
                end if;
                X := X_Max;
             elsif (Out_Code and LEFT) /= 0 then
                if P1.X /= P0.X then
-                  Y := Coordinate
-                    (Long_Integer (P0.Y) +
-                     (Long_Integer (P1.Y) - Long_Integer (P0.Y)) *
-                     (Long_Integer (X_Min) - Long_Integer (P0.X)) /
-                     (Long_Integer (P1.X) - Long_Integer (P0.X)));
+                  Y :=
+                    Coordinate
+                      (Long_Integer (P0.Y)
+                       + (Long_Integer (P1.Y) - Long_Integer (P0.Y))
+                         * (Long_Integer (X_Min) - Long_Integer (P0.X))
+                         / (Long_Integer (P1.X) - Long_Integer (P0.X)));
                else
                   Y := P0.Y;
                end if;
@@ -116,8 +120,7 @@ package body Glyph.Algorithms.Clipping is
 
       if Accepted then
          return
-           (Visible => True,
-            Clipped => (Start_Point => P0, End_Point => P1));
+           (Visible => True, Clipped => (Start_Point => P0, End_Point => P1));
       else
          return (Visible => False, Clipped => Line);
       end if;

@@ -3,8 +3,7 @@ with Glyph.Types;
 package Glyph.Algorithms.Triangle is
 
    generic
-      with
-        procedure Draw_Line (Line : Glyph.Types.Line);
+      with procedure Draw_Line (Line : Glyph.Types.Line);
    procedure Rasterize_Triangle (Tri : Glyph.Types.Triangle);
 
    generic

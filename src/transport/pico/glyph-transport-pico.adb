@@ -8,9 +8,7 @@ package body Glyph.Transport.Pico is
       Data    : Glyph.Transport.Byte_Array) is
    begin
       Glyph.Transport.I2C.I2C_Write
-        (Bus     => Bus,
-         Address => HAL.I2C.I2C_Address (Address),
-         Data    => Data);
+        (Bus => Bus, Address => HAL.I2C.I2C_Address (Address), Data => Data);
    end I2C_Write;
 
 end Glyph.Transport.Pico;

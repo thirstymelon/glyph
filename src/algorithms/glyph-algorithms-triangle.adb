@@ -14,9 +14,9 @@ package body Glyph.Algorithms.Triangle is
    is
       use Glyph.Types;
 
-      P0 : Point := Tri.A;
-      P1 : Point := Tri.B;
-      P2 : Point := Tri.C;
+      P0   : Point := Tri.A;
+      P1   : Point := Tri.B;
+      P2   : Point := Tri.C;
       Temp : Point;
 
       procedure Swap (A, B : in out Point) is
@@ -31,15 +31,17 @@ package body Glyph.Algorithms.Triangle is
          Clamped_X_End   : Coordinate;
       begin
          if Y >= 0 and then Y <= Y_Max then
-            Clamped_X_Start := Coordinate'Max (0, Coordinate'Min (X_Start, X_End));
-            Clamped_X_End   := Coordinate'Min (X_Max, Coordinate'Max (X_Start, X_End));
+            Clamped_X_Start :=
+              Coordinate'Max (0, Coordinate'Min (X_Start, X_End));
+            Clamped_X_End :=
+              Coordinate'Min (X_Max, Coordinate'Max (X_Start, X_End));
             if Clamped_X_Start <= Clamped_X_End then
                Fill_Row (Clamped_X_Start, Clamped_X_End, Y);
             end if;
          end if;
       end Draw_Row;
 
-      Xa, Xb : Coordinate;
+      Xa, Xb         : Coordinate;
       Y_Start, Y_End : Coordinate;
 
    begin
@@ -62,7 +64,7 @@ package body Glyph.Algorithms.Triangle is
       end if;
 
       Y_Start := Coordinate'Max (0, P0.Y);
-      Y_End   := Coordinate'Min (Y_Max, P2.Y);
+      Y_End := Coordinate'Min (Y_Max, P2.Y);
 
       for Y in Y_Start .. Y_End loop
          Xa := P0.X + (Y - P0.Y) * (P2.X - P0.X) / (P2.Y - P0.Y);

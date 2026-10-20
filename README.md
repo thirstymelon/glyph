@@ -69,6 +69,9 @@ Glyph currently provides:
 - Half-circle drawing (`Paint_Half_Circle`, `Paint_Filled_Half_Circle`)
 - Triangle outline drawing (`Paint_Triangle`)
 - Filled triangle drawing (`Paint_Filled_Triangle`)
+- Text & string rendering (`Paint_Text`) with scaling (`Scale`)
+- Built-in crisp 5x7 ASCII bitmap font (`Glyph.Fonts.Font_5x7`)
+- Optional direct zero-framebuffer streaming (`OLED.Set_Transport_Mode (GDDRAM_Stream)`)
 - Simple flat integer drawing APIs (`Paint_Circle (100, 20, 12)`, etc.)
 - Cohen–Sutherland line clipping with integer outcodes
 - Bresenham integer line rasterization with fast orthogonal bypass
@@ -104,6 +107,8 @@ Glyph currently provides:
 - ☑ Half-circle primitive
 - ☑ Triangle primitive
 - ☑ Filled triangle primitive
+- ☑ Bitmap fonts & text rendering (`Paint_Text`, `Font_5x7`)
+- ☑ Optional direct zero-framebuffer GDDRAM streaming (`OLED.Set_Transport_Mode`)
 - ☑ Generic graphics algorithm framework
 - ☑ Parameterized static monochrome framebuffer (`Generic_Mono`)
 - ☑ Generic static display composition engine (`Generic_Display`)
@@ -134,7 +139,8 @@ Glyph currently provides:
 
 ### Text & Images
 
-- ☐ Bitmap fonts
+- ☑ Bitmap fonts (5x7 ASCII)
+- ☐ Proportional & custom sized fonts
 - ☐ UTF-8 text rendering
 - ☐ Image / bitmap rendering
 
@@ -161,8 +167,8 @@ The example demonstrates:
 - I²C configuration (GP8 SDA, GP9 SCL on I2C0)
 - Hardware timer initialization (`RP.Device.Timer.Enable`)
 - Passing the hardware I2C port directly to `OLED.Init` without custom glue code
-- Drawing primitives (`Paint_Rectangle`, `Paint_Line`, `Paint_Filled_Rectangle`, `Paint_Pixel`, `Paint_Circle`, `Paint_Filled_Circle`, `Paint_Arc`, `Paint_Half_Circle`, `Paint_Filled_Half_Circle`, `Paint_Triangle`, `Paint_Filled_Triangle`)
-- Real-time animated cyber dashboard rendering to the display
+- Drawing primitives (`Paint_Circle`, `Paint_Filled_Circle`, `Paint_Arc`, `Paint_Line`, `Paint_Filled_Triangle`, `Paint_Pixel`, `Paint_Text`)
+- Minimalist real-time animated music player featuring a prominent rotating vinyl record, tonearm, track typography ("Sailor Song" by Gigi Perez), and progress scrubber
 
 ---
 
@@ -201,6 +207,9 @@ glyph/
 │   │   └── generic/
 │   │       ├── glyph-display-generic_display.ads
 │   │       └── glyph-display-generic_display.adb
+│   ├── fonts/
+│   │   ├── glyph-fonts.ads
+│   │   └── glyph-fonts.adb
 │   ├── transport/
 │   │   ├── glyph-transport.ads
 │   │   ├── i2c/

@@ -5,7 +5,6 @@ with RP.Clock;
 with Pico;
 
 with Glyph.Display;
-with Glyph.Types;
 
 procedure Example is
 
@@ -18,22 +17,11 @@ procedure Example is
    OLED : Glyph.Display.Display_T :=
      Glyph.Display.Get_Display (Glyph.Display.SSD1306_128x64_I2C);
 
-   --  Bouncing HUD box state
-   Box_X  : Integer := 62;
-   Box_Y  : Integer := 13;
-   Step_X : Integer := 1;
-   Step_Y : Integer := 1;
-   Box_W  : constant := 28;
-   Box_H  : constant := 16;
-
-   --  Radar sweep angle in degrees (0..359)
-   Radar_Angle : Integer := 0;
-
-   --  Progress meter gauge state
-   Meter_Val  : Integer := 2;
-   Meter_Step : Integer := 1;
-
-   Frame : Natural := 0;
+   --  Animation state
+   Disk_Angle : Natural := 0;
+   Progress   : Natural := 12;
+   Step       : Integer := 1;
+   Frame      : Natural := 0;
 
 begin
 
@@ -52,113 +40,67 @@ begin
    OLED.Init (I2C'Access);
 
    loop
-      --  Start each frame with a blank canvas
+      --  1. Clear canvas for next frame
       OLED.Canvas.Clear;
 
-      --  Screen border & top header bar
-      OLED.Canvas.Paint_Rectangle (0, 0, 128, 64);
-      OLED.Canvas.Paint_Line (0, 9, 127, 9);
+      --  2. Main Hero Element: Large Rotating Vinyl Record (Center: 32, 32)
+      --  Outer rim & concentric sound grooves (R: 28, 23, 18, 13)
+      OLED.Canvas.Paint_Circle (32, 32, 28);
+      OLED.Canvas.Paint_Circle (32, 32, 23);
+      OLED.Canvas.Paint_Circle (32, 32, 18);
+      OLED.Canvas.Paint_Circle (32, 32, 13);
 
-      --  Blinking status heartbeat indicator (top-left)
-      if (Frame / 20) mod 2 = 0 then
-         OLED.Canvas.Paint_Filled_Circle (6, 4, 2);
-      else
-         OLED.Canvas.Paint_Circle (6, 4, 2);
-      end if;
-
-      --  Battery icon with rounded cap
-      OLED.Canvas.Paint_Rectangle (110, 2, 12, 6);
-      OLED.Canvas.Paint_Filled_Rectangle (112, 4, 7, 2);
-      OLED.Canvas.Paint_Filled_Half_Circle (123, 5, 2, Glyph.Types.Right);
-
-      --  Signal strength bars
-      OLED.Canvas.Paint_Line (20, 3, 20, 6);
-      OLED.Canvas.Paint_Line (24, 4, 24, 6);
-      OLED.Canvas.Paint_Line (28, 4, 28, 6);
-      OLED.Canvas.Paint_Line (32, 2, 32, 7);
-
-      --  1. Radar section (left side)
-      OLED.Canvas.Paint_Circle (28, 36, 22);
-      OLED.Canvas.Paint_Circle (28, 36, 12);
-      OLED.Canvas.Paint_Line (6, 36, 50, 36);
-      OLED.Canvas.Paint_Line (28, 14, 28, 58);
-
-      --  Sweeping radar beam (pie sector)
-      OLED.Canvas.Paint_Filled_Circle
-        (Center_X    => 28,
-         Center_Y    => 36,
-         Radius      => 21,
-         Start_Angle => Radar_Angle,
-         End_Angle   => (Radar_Angle + 45) mod 360);
-
-      --  Outer orbiting arc
+      --  Dual dynamic glossy sheen arcs rotating with the record
       OLED.Canvas.Paint_Arc
-        (Center_X    => 28,
-         Center_Y    => 36,
-         Radius      => 25,
-         Start_Angle => (Radar_Angle * 2) mod 360,
-         End_Angle   => (Radar_Angle * 2 + 70) mod 360);
+        (Center_X    => 32,
+         Center_Y    => 32,
+         Radius      => 21,
+         Start_Angle => Disk_Angle,
+         End_Angle   => (Disk_Angle + 45) mod 360);
 
-      --  Radar center hub & simulated blips
-      OLED.Canvas.Paint_Filled_Circle (28, 36, 2);
-      OLED.Canvas.Paint_Pixel (36, 26);
-      OLED.Canvas.Paint_Pixel (37, 26);
-      OLED.Canvas.Paint_Pixel (20, 44);
+      OLED.Canvas.Paint_Arc
+        (Center_X    => 32,
+         Center_Y    => 32,
+         Radius      => 16,
+         Start_Angle => (Disk_Angle + 180) mod 360,
+         End_Angle   => (Disk_Angle + 225) mod 360);
 
-      --  2. Bouncing HUD target box with nested chevron triangle
-      OLED.Canvas.Paint_Rectangle (Box_X, Box_Y, Box_W, Box_H);
-      OLED.Canvas.Paint_Filled_Rectangle (Box_X + 2, Box_Y + 2, 8, Box_H - 4);
+      --  Center record label & spindle hole
+      OLED.Canvas.Paint_Circle (32, 32, 8);
+      OLED.Canvas.Paint_Filled_Circle (32, 32, 3);
+      OLED.Canvas.Paint_Pixel (32, 32);
 
-      OLED.Canvas.Paint_Triangle
-        (X1 => Box_X + 14,
-         Y1 => Box_Y + 3,
-         X2 => Box_X + 24,
-         Y2 => Box_Y + (Box_H / 2),
-         X3 => Box_X + 14,
-         Y3 => Box_Y + Box_H - 3);
+      --  Delicate tonearm resting on the record groove
+      OLED.Canvas.Paint_Filled_Circle (61, 6, 2);
+      OLED.Canvas.Paint_Line (61, 6, 54, 18);
+      OLED.Canvas.Paint_Line (54, 18, 47, 24);
 
-      OLED.Canvas.Paint_Filled_Triangle
-        (X1 => Box_X + 16,
-         Y1 => Box_Y + 5,
-         X2 => Box_X + 21,
-         Y2 => Box_Y + (Box_H / 2),
-         X3 => Box_X + 16,
-         Y3 => Box_Y + Box_H - 5);
+      --  3. Right Side: Minimal Track Typography
+      OLED.Canvas.Paint_Text (67, 13, "Sailor");
+      OLED.Canvas.Paint_Text (67, 23, "Song");
+      OLED.Canvas.Paint_Text (67, 35, "Gigi Perez");
 
-      --  3. Dynamic progress gauge with semi-circular caps
-      OLED.Canvas.Paint_Rectangle (60, 42, 56, 16);
+      --  4. Playback State & Progress Bar
+      OLED.Canvas.Paint_Filled_Triangle (67, 47, 67, 53, 72, 50);
+      OLED.Canvas.Paint_Text (76, 47, "1:24");
 
-      if Meter_Val > 0 then
-         OLED.Canvas.Paint_Filled_Rectangle (63, 45, Meter_Val, 10);
-      end if;
+      --  Slim progress line with scrubber dot
+      OLED.Canvas.Paint_Line (67, 57, 122, 57);
+      OLED.Canvas.Paint_Filled_Circle (67 + Progress, 57, 2);
 
-      OLED.Canvas.Paint_Half_Circle (118, 50, 7, Glyph.Types.Right);
-      OLED.Canvas.Paint_Filled_Half_Circle (118, 50, 4, Glyph.Types.Right);
-      OLED.Canvas.Paint_Filled_Half_Circle (88, 42, 3, Glyph.Types.Top);
+      --  5. Advance animation state
+      Disk_Angle := (Disk_Angle + 8) mod 360;
 
-      --  Advance animations
-      Radar_Angle := (Radar_Angle + 6) mod 360;
-
-      Meter_Val := Meter_Val + Meter_Step;
-      if Meter_Val >= 50 or else Meter_Val <= 2 then
-         Meter_Step := -Meter_Step;
-      end if;
-
-      --  Bounce physics for HUD box
-      Box_X := Box_X + Step_X;
-      Box_Y := Box_Y + Step_Y;
-
-      if Box_X <= 56 or else Box_X + Box_W >= 126 then
-         Step_X := -Step_X;
-      end if;
-
-      if Box_Y <= 11 or else Box_Y + Box_H >= 40 then
-         Step_Y := -Step_Y;
+      if Frame mod 4 = 0 then
+         Progress := Progress + Step;
+         if Progress >= 54 or else Progress <= 2 then
+            Step := -Step;
+         end if;
       end if;
 
       Frame := Frame + 1;
 
-      --  Push buffer to display and pace the animation loop
+      --  6. Transmit frame to OLED display
       OLED.Render;
       RP.Device.Timer.Delay_Milliseconds (20);
    end loop;
