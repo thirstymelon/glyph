@@ -4,6 +4,18 @@ Glyph is a lightweight, zero-heap 2D graphics framework for bare-metal embedded 
 
 Built on standard **Ada HAL (`HAL.I2C`, `HAL.SPI`)**, Glyph provides embedded-first display drivers for **SSD1306** monochrome OLEDs and **ILI9341** 16-bit color TFTs on the **RP2040** (Raspberry Pi Pico), with zero dynamic heap allocation.
 
+<p align="center">
+  <img src="docs/assets/ssd1306_animation.gif" alt="SSD1306 OLED Music Player" height="240" />
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/assets/ili9341_animation.gif" alt="ILI9341 Color TFT Calculator" height="240" />
+</p>
+
+<p align="center">
+  <b>SSD1306 (128×64 Monochrome OLED · I2C)</b> &nbsp;&nbsp;&bull;&nbsp;&nbsp; <b>ILI9341 (240×320 16-Bit Color TFT · SPI)</b><br>
+  <sub><i>Retro cassette player ("Sailor Song") &nbsp;&bull;&nbsp; Mechanical scientific calculator with live sine wave preview</i></sub><br>
+  <sub>Zero dynamic allocation &bull; Real-time hardware rendering &bull; RP2040 bare-metal drivers</sub>
+</p>
+
 ---
 
 ## Documentation

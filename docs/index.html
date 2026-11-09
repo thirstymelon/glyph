@@ -7,6 +7,17 @@
   <div class="cta"><a class="btn p" href="getting-started.html">Get started</a><a class="btn" href="tutorials/index.html">Browse tutorials</a><a class="btn" href="developer-overview.html">Developer architecture</a></div>
 </div>
 
+<div class="showcase-banner">
+  <div class="showcase-item">
+    <img src="assets/ssd1306_animation.gif" alt="SSD1306 Music Player" height="190">
+    <span><b>SSD1306 Monochrome OLED (128×64)</b><br>Retro cassette music player ("Sailor Song")</span>
+  </div>
+  <div class="showcase-item">
+    <img src="assets/ili9341_animation.gif" alt="ILI9341 Calculator" height="190">
+    <span><b>ILI9341 16-Bit Color TFT (240×320)</b><br>Mechanical scientific calculator with live waveforms</span>
+  </div>
+</div>
+
 <h2 id="first-program">Your first Glyph program (RP2040 + SSD1306)</h2>
 <pre><code>with RP.GPIO;
 with RP.I2C_Master;
@@ -37,6 +48,12 @@ begin
    -- Flush frame to physical OLED panel
    OLED.Render;
 end Main;</code></pre>
+
+<div class="display-preview">
+  <img src="assets/first_program.gif" alt="First Program Output on SSD1306" width="400">
+  <div class="caption">SSD1306 Hardware Output: Frame, Circle &amp; Text (128×64 Monochrome OLED)</div>
+</div>
+
 <p>Every drawing call operates directly on the display instance. All internal buffers are statically sized with zero heap allocation.</p>
 
 <h2 id="learn">Choose your next step</h2>

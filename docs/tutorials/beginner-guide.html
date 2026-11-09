@@ -92,6 +92,11 @@ begin
    OLED.Render;
 end Lesson_2;</code></pre>
 
+<div class="display-preview">
+  <img src="../assets/lesson_2_pixels.gif" alt="Lesson 2 Pixel Plotting" width="380">
+  <div class="caption">SSD1306 Pixel Output: 4-Corner Pinpointing &amp; Marching Dotted Row</div>
+</div>
+
 <details><summary>Exercise 2: Plot a dotted line across the middle</summary><div>
 <p>Use a loop to plot every other pixel along row <code>Y = 32</code>:</p>
 <pre><code>for X in 0 .. 63 loop
@@ -132,6 +137,11 @@ begin
 
    OLED.Render;
 end Lesson_3;</code></pre>
+
+<div class="display-preview">
+  <img src="../assets/lesson_3_lines.gif" alt="Lesson 3 Lines & Bresenham" width="380">
+  <div class="caption">SSD1306 Lines: Bresenham Diagonal 'X' &amp; Fast Orthogonal Crosshairs</div>
+</div>
 
 <details><summary>Exercise 3: Draw a diagonal grid</summary><div>
 <p>Draw diagonal hatch lines across the display:</p>
@@ -174,6 +184,11 @@ begin
 
    OLED.Render;
 end Lesson_4;</code></pre>
+
+<div class="display-preview">
+  <img src="../assets/lesson_4_rectangles.gif" alt="Lesson 4 Rectangles & Progress Meters" width="380">
+  <div class="caption">SSD1306 Rectangles: Border Frame &amp; Dynamic Progress Bar</div>
+</div>
 
 <details><summary>Exercise 4: Draw concentric picture frames</summary><div>
 <p>Draw three nested frames spaced 4 pixels apart:</p>
@@ -219,6 +234,11 @@ begin
 
    OLED.Render;
 end Lesson_5;</code></pre>
+
+<div class="display-preview">
+  <img src="../assets/lesson_5_circles.gif" alt="Lesson 5 Circles & Gauges" width="380">
+  <div class="caption">SSD1306 Circles: Concentric Radar Rings &amp; Solid Center Hub</div>
+</div>
 
 <details><summary>Exercise 5: Draw a moon crescent</summary><div>
 <p>Draw a filled circle, then erase an overlapping part to make a crescent:</p>
@@ -268,6 +288,11 @@ begin
    TFT.Paint_Filled_Circle (120, 160, 40, Color => 16#07E0#); -- Green
    TFT.Render;
 end Lesson_6;</code></pre>
+
+<div class="display-preview">
+  <img src="../assets/lesson_6_ili9341.gif" alt="Lesson 6 ILI9341 Color TFT" width="240">
+  <div class="caption">ILI9341 16-Bit RGB565 Output: White Frame &amp; Green Disc (240×320)</div>
+</div>
 <button class="done"></button>
 
 <!-- Lesson 7 -->
@@ -291,6 +316,11 @@ begin
    -- Horizontal meter underline
    Disp.Paint_Line (20, 130, 220, 130, Color => C_Cyan);
 end Draw_Dashboard;</code></pre>
+
+<div class="display-preview">
+  <img src="../assets/lesson_7_triangles.gif" alt="Lesson 7 Color Shapes & Triangles" width="240">
+  <div class="caption">ILI9341 Polygon Rasterization: Warning Triangle &amp; Cyan Meter Underline</div>
+</div>
 <button class="done"></button>
 
 <!-- Lesson 8 -->
@@ -322,6 +352,11 @@ begin
 
    OLED.Render;
 end Lesson_8;</code></pre>
+
+<div class="display-preview">
+  <img src="../assets/lesson_8_text.gif" alt="Lesson 8 Text & Bitmap Fonts" width="380">
+  <div class="caption">SSD1306 Typography: Standard 5×7 ASCII &amp; Scaled 2× Text with Cursor</div>
+</div>
 <button class="done"></button>
 
 <!-- Lesson 9 -->
@@ -365,6 +400,11 @@ begin
       RP.Device.Timer.Delay_Milliseconds (33); -- ~30 FPS
    end loop;
 end Lesson_9;</code></pre>
+
+<div class="display-preview">
+  <img src="../assets/lesson_9_animation.gif" alt="Lesson 9 30 FPS Animation Loop" width="380">
+  <div class="caption">SSD1306 Real-Time Animation: 30 FPS Hardware Timer Sweeping Radar</div>
+</div>
 <button class="done"></button>
 
 <div class="pn">
