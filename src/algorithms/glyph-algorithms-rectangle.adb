@@ -1,4 +1,6 @@
-package body Glyph.Algorithms.Rectangle is
+package body Glyph.Algorithms.Rectangle with
+  SPARK_Mode => On
+is
 
    procedure Rasterize_Rectangle
      (Rect  : Glyph.Types.Rectangle;

@@ -2,7 +2,7 @@
 #ifndef GLYPH_CONFIG_H
 #define GLYPH_CONFIG_H
 
-#define CRATE_VERSION "1.1.0"
+#define CRATE_VERSION "1.2.0"
 #define CRATE_NAME "glyph"
 
 #define ALIRE_HOST_OS "macos"
@@ -15,6 +15,6 @@
 #define BUILD_PROFILE_VALIDATION 2
 #define BUILD_PROFILE_DEVELOPMENT 3
 
-#define BUILD_PROFILE  3
+#define BUILD_PROFILE  1
 
 #endif

@@ -1,6 +1,8 @@
 with Glyph.Types;
 
-package Glyph.Algorithms.Triangle is
+package Glyph.Algorithms.Triangle with
+  SPARK_Mode => On
+is
 
    generic
       with procedure Draw_Line (Line : Glyph.Types.Line);

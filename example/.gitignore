@@ -1,4 +1,4 @@
-/obj/
-/bin/
-/alire/
-/config/
+alire/
+alire.lock
+bin/
+obj/

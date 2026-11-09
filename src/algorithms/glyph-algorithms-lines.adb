@@ -1,4 +1,6 @@
-package body Glyph.Algorithms.Lines is
+package body Glyph.Algorithms.Lines with
+  SPARK_Mode => On
+is
 
    procedure Rasterize_Line (Line : Glyph.Types.Line) is
       use Glyph.Types;

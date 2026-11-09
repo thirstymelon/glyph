@@ -8,7 +8,7 @@ project Example is
    for Object_Dir use "obj/" & Example_Config.Build_Profile;
    for Create_Missing_Dirs use "True";
    for Exec_Dir use "bin";
-   for Main use ("example.adb");
+   for Main use ("example_main.adb");
 
    for Target use "arm-eabi";
    for Runtime ("Ada") use "light-cortex-m0p";

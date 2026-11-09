@@ -1,0 +1,266 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Developer overview · Glyph 1.2.0</title><link rel="stylesheet" href="styles.css"><link rel="icon" type="image/png" href="assets/logo.png"></head><body data-r=""><header><div class="w"><a class="brand" href="index.html"><img src="assets/logo.png" alt="Glyph"><span>Glyph<i>.</i><sup>1.2.0</sup></span></a><nav><a href="getting-started.html">Start</a><a href="tutorials/index.html">Tutorials</a><a href="developer-overview.html" class="on">Developer</a><a href="reference.html">Reference</a></nav><button class="sb" id="sk">Search <kbd>Ctrl K</kbd></button><button class="mb" id="mb" aria-label="Menu">≡</button></div></header><div class="w doc"><article>
+
+<p class="eb">Systems Architecture &amp; Internals</p>
+<h1>Developer overview</h1>
+<p class="lead">A complete architectural guide to Glyph’s memory model, rendering pipelines, package organization, display controller protocols, and desktop simulator engine.</p>
+
+<div class="note">
+  <p><b>Embedded Systems Engineering:</b> Glyph is designed from the ground up for microcontrollers like the RP2040, eliminating dynamic heap allocations while providing uniform painting APIs across monochrome OLEDs and color TFTs.</p>
+</div>
+
+<!-- Architecture -->
+<h2 id="architecture">Layered Architecture</h2>
+<p>Glyph strictly separates graphics algorithms, drawing abstractions, framebuffer representations, display controller protocols, and physical transport buses. Each layer communicates exclusively with the layer directly beneath it:</p>
+
+<div class="diag-box">
+  <div class="diag-title">Glyph Architectural Stack</div>
+  <div class="arch-tree">
+    <div class="arch-node highlight">
+      <b>Application Layer</b>
+      <small>User Firmware / Embedded Animation Loop</small>
+    </div>
+    <div class="arch-arrow">↓</div>
+    <div class="arch-node">
+      <b>Glyph.Display</b>
+      <small>Unified Facade (SSD1306 &amp; ILI9341 Drivers)</small>
+    </div>
+    <div class="arch-arrow">↓</div>
+    <div class="arch-branches">
+      <div class="arch-branch-col">
+        <div class="arch-branch-header">Graphics &amp; Buffer Pipeline</div>
+        <div class="arch-node">
+          <b>Glyph.Canvas</b>
+          <small>Viewport Clipping &amp; Damage Tracking</small>
+        </div>
+        <div class="arch-arrow">↓</div>
+        <div class="arch-node">
+          <b>Glyph.Algorithms</b>
+          <small>Bresenham, Midpoint, AABB, DDA</small>
+        </div>
+        <div class="arch-arrow">↓</div>
+        <div class="arch-node">
+          <b>Framebuffer &amp; Stream</b>
+          <small>1 KB Monochrome / 15 KB Tile Stream</small>
+        </div>
+      </div>
+      <div class="arch-branch-col">
+        <div class="arch-branch-header">Hardware Protocol Pipeline</div>
+        <div class="arch-node">
+          <b>Glyph.Controllers</b>
+          <small>SSD1306 Commands / ILI9341 Windows</small>
+        </div>
+        <div class="arch-arrow">↓</div>
+        <div class="arch-node">
+          <b>Glyph.Transport</b>
+          <small>Universal HAL.I2C &amp; HAL.SPI Bridges</small>
+        </div>
+        <div class="arch-arrow">↓</div>
+        <div class="arch-node highlight">
+          <b>Physical Hardware</b>
+          <small>OLED Panel / SPI TFT Display</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rendering Pipeline -->
+<h2 id="pipeline">Rendering Pipeline</h2>
+<p>Every drawing primitive follows an identical deterministic execution pipeline. There are no virtual method dispatch tables or hidden runtime allocations:</p>
+
+<div class="diag-box">
+  <div class="diag-title">Deterministic Execution Flow</div>
+  <div class="pipeline-flow">
+    <div class="pipe-step">
+      <div class="pipe-num">1</div>
+      <div class="pipe-content">
+        <b>Paint_Primitive(...) Call</b>
+        <p>Application calls drawing routines (Pixel, Line, Rect, Circle, Text) in natural screen space.</p>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">2</div>
+      <div class="pipe-content">
+        <b>Coordinate Normalization &amp; Clipping</b>
+        <p>Canvas verifies viewport boundaries and updates private dirty damage bounding boxes.</p>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">3</div>
+      <div class="pipe-content">
+        <b>Pure Integer Rasterization</b>
+        <p>Algorithms execute stateless math (Cohen-Sutherland, Bresenham, Midpoint, Scanline spans).</p>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">4</div>
+      <div class="pipe-content">
+        <b>Framebuffer / Direct Stream Dispatch</b>
+        <p>Plots pixels into static memory buffers or dispatches immediate hardware window writes.</p>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">5</div>
+      <div class="pipe-content">
+        <b>Controller Register Sequencing</b>
+        <p>SSD1306 page commands or ILI9341 column/page address window framing setup.</p>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num">6</div>
+      <div class="pipe-content">
+        <b>Physical HAL Transmission</b>
+        <p>High-speed bus transfer over standard HAL.I2C or HAL.SPI peripherals to the physical panel.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>Primitive-Specific Pipelines</h3>
+<table>
+  <tr><th>Primitive<th>Rasterization Algorithm<th>Span / Plot Optimization</tr>
+  <tr><td><b>Line</b><td>Cohen–Sutherland clipping + Bresenham integer stepping</td><td>Fast orthogonal bypass for 0° horizontal and 90° vertical lines.</td></tr>
+  <tr><td><b>Rectangle</b><td>Axis-Aligned Bounding Box (AABB) intersection clipping</td><td>Continuous row-by-row packed memory span writes.</td></tr>
+  <tr><td><b>Circle / Arc</b><td>Midpoint circle algorithm + 8-way symmetric octants</td><td>$O(1)$ cross-product 2D vector testing for angular sweeps.</td></tr>
+  <tr><td><b>Triangle</b><td>Vertex Y-sorting + 3-edge DDA interpolation</td><td>Horizontal scanline span filling between left and right edges.</td></tr>
+  <tr><td><b>Text</b><td>Static 5x7 ASCII bitmap font ROM matrix lookup</td><td>Bitwise character glyph projection with optional integer scaling.</td></tr>
+</table>
+
+<!-- Memory Model -->
+<h2 id="memory-model">Memory Model &amp; Zero Dynamic Allocation</h2>
+<p>Glyph enforces an uncompromised zero-heap policy:</p>
+<ul>
+  <li><b>No Dynamic Allocators:</b> The codebase never invokes <code>new</code> or calls <code>malloc</code> / <code>free</code>.</li>
+  <li><b>Fixed Compile-Time Buffers:</b> Monochrome framebuffers (e.g. <code>C128x64_Mono</code>) occupy exactly 1,024 bytes of statically allocated memory.</li>
+  <li><b>Deterministic Execution:</b> Execution time for clipping, rasterization, and coordinate translation is bounded and reproducible, with zero GC pauses or heap fragmentation risks.</li>
+  <li><b>Stack Discipline:</b> Geometric calculations (points, bounding boxes, outcodes) use plain scalar records allocated directly on the CPU stack.</li>
+</ul>
+
+<!-- Package Responsibilities -->
+<h2 id="packages">Package Organization &amp; Responsibilities</h2>
+
+<h3>Glyph.Types &amp; Glyph.Colors</h3>
+<p>Defines scalar geometric types (<code>Point</code>, <code>Line</code>, <code>Rectangle</code>, <code>Circle</code>, <code>Triangle</code>, <code>Angle</code>, <code>Hemisphere</code>) and pixel representations (<code>Monochrome</code>, <code>Grayscale</code>, <code>RGB565</code>, <code>RGB888</code>).</p>
+<p><code>Glyph.Colors</code> also provides SPARK-verified (<code>SPARK_Mode => On</code>) pure integer fixed-point manipulation utilities:</p>
+<ul>
+  <li><code>Dim (Color, Percent)</code>: Attenuates brightness by an integer percentage without floating-point math.</li>
+  <li><code>Brighten (Color, Percent)</code>: Brightens towards white using integer interpolation.</li>
+  <li><code>Blend (Color_A, Color_B, Weight_A)</code>: Deterministic linear interpolation between two colors.</li>
+</ul>
+
+<h3>Glyph.Algorithms</h3>
+<p>Contains pure, stateless mathematical algorithms completely decoupled from display hardware and framebuffers:</p>
+<ul>
+  <li><code>Glyph.Algorithms.Clipping</code>: Cohen–Sutherland line clipping with integer outcodes (<code>INSIDE</code>, <code>LEFT</code>, <code>RIGHT</code>, <code>BOTTOM</code>, <code>TOP</code>).</li>
+  <li><code>Glyph.Algorithms.Lines</code>: Bresenham rasterizer with fast orthogonal horizontal/vertical bypass paths.</li>
+  <li><code>Glyph.Algorithms.Rectangle</code>: Axis-aligned bounding box clipping and span generators.</li>
+  <li><code>Glyph.Algorithms.Circle</code>: Midpoint stepping with $O(1)$ cross-product vector inclusion testing for arbitrary angular sweeps and pie wedges.</li>
+  <li><code>Glyph.Algorithms.Triangle</code>: Vertex sorting and DDA scanline edge interpolation.</li>
+</ul>
+
+<h3>Glyph.Controllers &amp; Glyph.Display</h3>
+<p>Display drivers compose controllers, canvas buffers, and HAL transports into an embedded-first object:</p>
+<ul>
+  <li><code>Glyph.Display.SSD1306</code>: Full facade for 128x64 monochrome OLEDs over <code>HAL.I2C</code>.</li>
+  <li><code>Glyph.Display.ILI9341</code>: Full facade for 240x320 16-bit color TFTs over <code>HAL.SPI</code>, supporting <code>Framebuffer</code>, <code>Tile_Stream</code>, and <code>Direct_Stream</code> modes.</li>
+</ul>
+
+<!-- Banding & Damage Tracking -->
+<h2 id="banding">Transparent Banding (Tile Streaming)</h2>
+<p>Color displays such as the 240x320 ILI9341 require 153.6 KB of RAM for a full framebuffer—exceeding the memory capacity of many microcontrollers. Glyph solves this with <b>Transparent Banding</b> (<code>Tile_Stream</code> mode):</p>
+<ul>
+  <li><b>Reduced Memory Footprint:</b> Allocates only a compact horizontal tile buffer (e.g., 240x32 pixels, requiring only ~15 KB RAM).</li>
+  <li><b>Zero Math for Applications:</b> The user writes normal rendering code using natural screen coordinates (e.g., <code>Y => 150</code>, <code>Y => 280</code>). Glyph’s <code>Render_Scene</code> callback engine partitions the display and translates coordinates into tile offsets automatically.</li>
+  <li><b>Bit-Exact Output:</b> Output generated via <code>Tile_Stream</code> is mathematically identical to a full in-memory framebuffer.</li>
+</ul>
+
+<h2 id="damage-tracking">Hidden Damage Tracking</h2>
+<p>To maximize I2C and SPI bus throughput, Glyph tracks the minimum dirty bounding box of modified pixels privately inside the display instance. Calling <code>Render</code> flushes only the altered region to the display controller, minimizing bus transmission time.</p>
+
+<!-- RP2040 Hardware Integration -->
+<h2 id="rp2040-hardware">RP2040 Hardware Integration</h2>
+<p>On the Raspberry Pi Pico (RP2040), Glyph connects directly via standard <code>rp2040_hal</code> drivers:</p>
+
+<table>
+  <tr><th>Display &amp; Protocol<th>RP2040 Pin<th>Peripheral Role</tr>
+  <tr><td><b>SSD1306 OLED (I2C)</b></td><td><code>GP8</code></td><td>I2C0 SDA (Data)</td></tr>
+  <tr><td><b>SSD1306 OLED (I2C)</b></td><td><code>GP9</code></td><td>I2C0 SCL (Clock)</td></tr>
+  <tr><td><b>ILI9341 Color TFT (SPI)</b></td><td><code>GP18</code></td><td>SPI0 SCK (Clock)</td></tr>
+  <tr><td><b>ILI9341 Color TFT (SPI)</b></td><td><code>GP19</code></td><td>SPI0 MOSI / TX</td></tr>
+  <tr><td><b>ILI9341 Color TFT (SPI)</b></td><td><code>GP16</code></td><td>SPI0 MISO / RX</td></tr>
+  <tr><td><b>ILI9341 Color TFT (SPI)</b></td><td><code>GP17</code></td><td>Chip Select (CS)</td></tr>
+  <tr><td><b>ILI9341 Color TFT (SPI)</b></td><td><code>GP20</code></td><td>Data / Command (DC)</td></tr>
+  <tr><td><b>ILI9341 Color TFT (SPI)</b></td><td><code>GP21</code></td><td>Hardware Reset (RST)</td></tr>
+</table>
+
+<!-- Desktop Simulator -->
+<h2 id="simulator">Desktop Simulator Engine (<code>simulator/</code>)</h2>
+<p>Glyph includes a native desktop simulator application in <code>simulator/</code> that runs without physical hardware on macOS, Linux, and Windows:</p>
+
+<h3>Key Features:</h3>
+<ul>
+  <li><b>Virtual In-Memory Buses:</b> Implements virtual <code>HAL.I2C</code> and <code>HAL.SPI</code> devices emulating SSD1306 GDDRAM and ILI9341 GRAM registers.</li>
+  <li><b>Dynamic Target Path:</b> Accepts a target directory argument dynamically:
+    <pre class="sh"><code>./simulator/bin/simulator_main /path/to/my_project</code></pre>
+  </li>
+  <li><b>Multi-Format Media Export:</b> Renders frames into 24-bit BMP images, PPM raster files, animated palette-optimized GIFs, and H.264 MP4 videos using bundled exporter packages.</li>
+</ul>
+
+<!-- Dependency Rules -->
+<h2 id="dependency-rules">One-Way Dependency Model</h2>
+<p>Glyph enforces a strict acyclic dependency hierarchy. No lower-level layer ever references or depends on a higher-level layer:</p>
+
+<div class="diag-box">
+  <div class="diag-title">Acyclic Layer Hierarchy (Layer N depends only on N-1)</div>
+  <div class="dep-layers">
+    <div class="dep-layer">
+      <span class="dep-lvl">Layer 4</span>
+      <div class="dep-info">
+        <b>User Application</b>
+        <span>Embedded firmware, animations, and high-level UI controls</span>
+      </div>
+    </div>
+    <div class="dep-layer">
+      <span class="dep-lvl">Layer 3</span>
+      <div class="dep-info">
+        <b>Glyph.Display</b>
+        <span>High-level facades unifying Canvases, Controllers, and Transports</span>
+      </div>
+    </div>
+    <div class="dep-layer">
+      <span class="dep-lvl">Layer 2</span>
+      <div class="dep-info">
+        <b>Glyph.Canvas &amp; Glyph.Controllers</b>
+        <span>Memory buffers, dirty tracking, and display protocol state machines</span>
+      </div>
+    </div>
+    <div class="dep-layer">
+      <span class="dep-lvl">Layer 1</span>
+      <div class="dep-info">
+        <b>Glyph.Algorithms &amp; Glyph.Transport</b>
+        <span>Stateless geometric rasterizers and hardware HAL bus bridges</span>
+      </div>
+    </div>
+    <div class="dep-layer root">
+      <span class="dep-lvl">Layer 0</span>
+      <div class="dep-info">
+        <b>Glyph.Types &amp; Glyph.Colors (Foundation)</b>
+        <span>Core scalar records, geometric points, and SPARK fixed-point math</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pn">
+  <a href="tutorials/beginner-guide.html"><small>← Previous</small>Beginner tutorials</a>
+  <a href="reference.html"><small>Next →</small>API reference</a>
+</div>
+
+</article><aside id="toc"></aside></div>
+
+<footer><div class="w"><span>Glyph 1.2.0 · Apache 2.0 License</span><span>Embedded 2D Graphics for Ada 2022</span></div></footer>
+
+<div id="pal"><div><input id="pi" placeholder="Search Glyph documentation…"><div id="pl"></div></div></div>
+
+<script src="docs.js"></script>
+</body></html>

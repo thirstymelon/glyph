@@ -4,7 +4,9 @@ with Glyph.Algorithms.Rectangle;
 with Glyph.Algorithms.Circle;
 with Glyph.Algorithms.Triangle;
 
-package body Glyph.Canvas.Generic_Mono is
+package body Glyph.Canvas.Generic_Mono with
+  SPARK_Mode => On
+is
 
    use type Glyph.Colors.Monochrome;
    use Glyph.Transport;
@@ -18,6 +20,7 @@ package body Glyph.Canvas.Generic_Mono is
    procedure Clear (Self : in out Instance) is
    begin
       Self.Buffer := (others => (others => Glyph.Colors.Off));
+      Self.Mark_All_Dirty;
    end Clear;
 
    procedure Paint_Pixel
@@ -28,6 +31,20 @@ package body Glyph.Canvas.Generic_Mono is
    begin
       if X >= 0 and then X <= Max_X and then Y >= 0 and then Y <= Max_Y then
          Self.Buffer (Natural (X), Natural (Y)) := Color;
+
+         if not Self.Damage.Has_Damage then
+            Self.Damage :=
+              (Has_Damage => True,
+               Min_X      => Natural (X),
+               Max_X      => Natural (X),
+               Min_Y      => Natural (Y),
+               Max_Y      => Natural (Y));
+         else
+            Self.Damage.Min_X := Natural'Min (Self.Damage.Min_X, Natural (X));
+            Self.Damage.Max_X := Natural'Max (Self.Damage.Max_X, Natural (X));
+            Self.Damage.Min_Y := Natural'Min (Self.Damage.Min_Y, Natural (Y));
+            Self.Damage.Max_Y := Natural'Max (Self.Damage.Max_Y, Natural (Y));
+         end if;
       end if;
    end Paint_Pixel;
 
@@ -448,13 +465,67 @@ package body Glyph.Canvas.Generic_Mono is
       Fill_Tri (Tri => Triangle, X_Max => Max_X, Y_Max => Max_Y);
    end Paint_Filled_Triangle;
 
+   procedure Set_Default_Font (Self : in out Instance; F : Glyph.Fonts.Font) is
+   begin
+      Self.Default_Font := F;
+   end Set_Default_Font;
+
+   function Get_Default_Font (Self : Instance) return Glyph.Fonts.Font is
+   begin
+      return Self.Default_Font;
+   end Get_Default_Font;
+
    procedure Paint_Text
-     (Self  : in out Instance;
-      X, Y  : Integer;
-      Char  : Character;
-      Font  : Glyph.Fonts.Font := Glyph.Fonts.Font_5x7;
-      Scale : Positive := 1;
-      Color : Glyph.Colors.Monochrome := Glyph.Colors.On)
+     (Self     : in out Instance;
+      X, Y     : Integer;
+      Text     : String;
+      Scale    : Positive := 1;
+      Color    : Glyph.Colors.Monochrome := Glyph.Colors.On;
+      Bg_Color : Glyph.Colors.Monochrome := Glyph.Colors.Off;
+      Opaque   : Boolean := False)
+   is
+   begin
+      Self.Paint_Text
+        (X        => X,
+         Y        => Y,
+         Text     => Text,
+         Font     => Self.Default_Font,
+         Scale    => Scale,
+         Color    => Color,
+         Bg_Color => Bg_Color,
+         Opaque   => Opaque);
+   end Paint_Text;
+
+   procedure Paint_Text
+     (Self     : in out Instance;
+      X, Y     : Integer;
+      Char     : Character;
+      Scale    : Positive := 1;
+      Color    : Glyph.Colors.Monochrome := Glyph.Colors.On;
+      Bg_Color : Glyph.Colors.Monochrome := Glyph.Colors.Off;
+      Opaque   : Boolean := False)
+   is
+   begin
+      Self.Paint_Text
+        (X        => X,
+         Y        => Y,
+         Char     => Char,
+         Font     => Self.Default_Font,
+         Scale    => Scale,
+         Color    => Color,
+         Bg_Color => Bg_Color,
+         Opaque   => Opaque);
+   end Paint_Text;
+
+   procedure Paint_Text
+     (Self     : in out Instance;
+      X, Y     : Integer;
+      Char     : Character;
+      Font     : Glyph.Fonts.Font;
+      Scale    : Positive := 1;
+      Color    : Glyph.Colors.Monochrome := Glyph.Colors.On;
+      Bg_Color : Glyph.Colors.Monochrome := Glyph.Colors.Off;
+      Opaque   : Boolean := False)
    is
       Actual_Char : Character := Char;
       Char_Index  : Integer;
@@ -488,18 +559,51 @@ package body Glyph.Canvas.Generic_Mono is
                      end loop;
                   end loop;
                end if;
+            elsif Opaque then
+               if Scale = 1 then
+                  Self.Paint_Pixel (X + Col, Y + Row, Bg_Color);
+               else
+                  for SX in 0 .. Scale - 1 loop
+                     for SY in 0 .. Scale - 1 loop
+                        Self.Paint_Pixel
+                          (X + Col * Scale + SX,
+                           Y + Row * Scale + SY,
+                           Bg_Color);
+                     end loop;
+                  end loop;
+               end if;
             end if;
          end loop;
       end loop;
+
+      --  Inter-character spacing column (cleared if opaque)
+      if Opaque then
+         for Row in 0 .. Font.Height - 1 loop
+            if Scale = 1 then
+               Self.Paint_Pixel (X + Font.Width, Y + Row, Bg_Color);
+            else
+               for SX in 0 .. Scale - 1 loop
+                  for SY in 0 .. Scale - 1 loop
+                     Self.Paint_Pixel
+                       (X + Font.Width * Scale + SX,
+                        Y + Row * Scale + SY,
+                        Bg_Color);
+                  end loop;
+               end loop;
+            end if;
+         end loop;
+      end if;
    end Paint_Text;
 
    procedure Paint_Text
-     (Self  : in out Instance;
-      X, Y  : Integer;
-      Text  : String;
-      Font  : Glyph.Fonts.Font := Glyph.Fonts.Font_5x7;
-      Scale : Positive := 1;
-      Color : Glyph.Colors.Monochrome := Glyph.Colors.On)
+     (Self     : in out Instance;
+      X, Y     : Integer;
+      Text     : String;
+      Font     : Glyph.Fonts.Font;
+      Scale    : Positive := 1;
+      Color    : Glyph.Colors.Monochrome := Glyph.Colors.On;
+      Bg_Color : Glyph.Colors.Monochrome := Glyph.Colors.Off;
+      Opaque   : Boolean := False)
    is
       Cur_X     : Integer := X;
       Cur_Y     : Integer := Y;
@@ -514,12 +618,14 @@ package body Glyph.Canvas.Generic_Mono is
             Cur_X := X;
          else
             Self.Paint_Text
-              (X     => Cur_X,
-               Y     => Cur_Y,
-               Char  => Char,
-               Font  => Font,
-               Scale => Scale,
-               Color => Color);
+              (X        => Cur_X,
+               Y        => Cur_Y,
+               Char     => Char,
+               Font     => Font,
+               Scale    => Scale,
+               Color    => Color,
+               Bg_Color => Bg_Color,
+               Opaque   => Opaque);
             Cur_X := Cur_X + Char_Step;
          end if;
       end loop;
@@ -566,5 +672,108 @@ package body Glyph.Canvas.Generic_Mono is
          end loop;
       end loop;
    end Fill_Page_Stream;
+
+   function Has_Damage (Self : Instance) return Boolean is
+   begin
+      return Self.Damage.Has_Damage;
+   end Has_Damage;
+
+   function Get_Damage (Self : Instance) return Glyph.Types.Rectangle is
+   begin
+      return
+        (X      => Coordinate (Self.Damage.Min_X),
+         Y      => Coordinate (Self.Damage.Min_Y),
+         Width  => Dimension (Self.Damage.Max_X - Self.Damage.Min_X + 1),
+         Height => Dimension (Self.Damage.Max_Y - Self.Damage.Min_Y + 1));
+   end Get_Damage;
+
+   procedure Reset_Damage (Self : in out Instance) is
+   begin
+      Self.Damage := (Has_Damage => False, others => 0);
+   end Reset_Damage;
+
+   procedure Mark_Dirty (Self : in out Instance; Rect : Glyph.Types.Rectangle) is
+      R_X0 : constant Integer := Rect.X;
+      R_Y0 : constant Integer := Rect.Y;
+      R_X1 : constant Integer := Rect.X + Integer (Rect.Width) - 1;
+      R_Y1 : constant Integer := Rect.Y + Integer (Rect.Height) - 1;
+      Cl_X0, Cl_X1 : Natural;
+      Cl_Y0, Cl_Y1 : Natural;
+   begin
+      if Rect.Width = 0 or else Rect.Height = 0
+        or else R_X1 < 0 or else R_X0 > Integer (Max_X)
+        or else R_Y1 < 0 or else R_Y0 > Integer (Max_Y)
+      then
+         return;
+      end if;
+
+      Cl_X0 := Natural (Integer'Max (0, R_X0));
+      Cl_X1 := Natural (Integer'Min (Integer (Max_X), R_X1));
+      Cl_Y0 := Natural (Integer'Max (0, R_Y0));
+      Cl_Y1 := Natural (Integer'Min (Integer (Max_Y), R_Y1));
+
+      if not Self.Damage.Has_Damage then
+         Self.Damage :=
+           (Has_Damage => True,
+            Min_X      => Cl_X0,
+            Max_X      => Cl_X1,
+            Min_Y      => Cl_Y0,
+            Max_Y      => Cl_Y1);
+      else
+         Self.Damage.Min_X := Natural'Min (Self.Damage.Min_X, Cl_X0);
+         Self.Damage.Max_X := Natural'Max (Self.Damage.Max_X, Cl_X1);
+         Self.Damage.Min_Y := Natural'Min (Self.Damage.Min_Y, Cl_Y0);
+         Self.Damage.Max_Y := Natural'Max (Self.Damage.Max_Y, Cl_Y1);
+      end if;
+   end Mark_Dirty;
+
+   procedure Mark_All_Dirty (Self : in out Instance) is
+   begin
+      Self.Damage :=
+        (Has_Damage => True,
+         Min_X      => 0,
+         Max_X      => Natural (Max_X),
+         Min_Y      => 0,
+         Max_Y      => Natural (Max_Y));
+   end Mark_All_Dirty;
+
+   procedure Fill_Page_Stream_Window
+     (Self        : Instance;
+      Col_Start   : X_Range;
+      Col_End     : X_Range;
+      Page_Start  : Natural;
+      Page_End    : Natural;
+      Data        : out Glyph.Transport.Byte_Array;
+      Prefix_Byte : Glyph.Transport.Byte := 16#40#;
+      Has_Prefix  : Boolean := True)
+   is
+      Pixel_Byte : Byte;
+      Data_Index : Positive := Data'First;
+      Pixel_Y    : Natural;
+   begin
+      if Has_Prefix then
+         Data (Data_Index) := Prefix_Byte;
+         Data_Index := Data_Index + 1;
+      end if;
+
+      for Page in Page_Start .. Page_End loop
+         for X in Col_Start .. Col_End loop
+            Pixel_Byte := 0;
+            for Bit in 0 .. 7 loop
+               Pixel_Y := Page * 8 + Bit;
+               if Pixel_Y < Height then
+                  if Self.Get_Pixel (X, Pixel_Y) = Glyph.Colors.On then
+                     Pixel_Byte := Pixel_Byte or Byte (2 ** Bit);
+                  end if;
+               end if;
+            end loop;
+
+            if Data_Index <= Data'Last then
+               Data (Data_Index) := Pixel_Byte;
+               Data_Index := Data_Index + 1;
+            end if;
+         end loop;
+      end loop;
+   end Fill_Page_Stream_Window;
 
 end Glyph.Canvas.Generic_Mono;

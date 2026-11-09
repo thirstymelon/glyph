@@ -1,4 +1,6 @@
-package body Glyph.Algorithms.Circle is
+package body Glyph.Algorithms.Circle with
+  SPARK_Mode => On
+is
 
    Sin_Table : constant array (0 .. 90) of Integer :=
      (0   => 0,    1   => 17,   2   => 35,   3   => 52,   4   => 70,

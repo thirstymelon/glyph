@@ -1,0 +1,83 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Overview · Glyph 1.2.0</title><link rel="stylesheet" href="styles.css"><link rel="icon" type="image/png" href="assets/logo.png"></head><body data-r=""><header><div class="w"><a class="brand" href="index.html"><img src="assets/logo.png" alt="Glyph"><span>Glyph<i>.</i><sup>1.2.0</sup></span></a><nav><a href="getting-started.html">Start</a><a href="tutorials/index.html">Tutorials</a><a href="developer-overview.html">Developer</a><a href="reference.html">Reference</a></nav><button class="sb" id="sk">Search <kbd>Ctrl K</kbd></button><button class="mb" id="mb" aria-label="Menu">≡</button></div></header><div class="w doc"><article>
+
+<div class="hero">
+  <p class="eb">Glyph · version 1.2.0</p>
+  <h1>Embedded 2D graphics.<br><em>Built with performance in mind.</em></h1>
+  <p class="lead">A fast, deterministic 2D graphics framework in Ada 2022 designed for bare-metal microcontrollers and small displays. Built for real hardware—SSD1306 OLEDs and ILI9341 color TFTs on the RP2040.</p>
+  <div class="cta"><a class="btn p" href="getting-started.html">Get started</a><a class="btn" href="tutorials/index.html">Browse tutorials</a><a class="btn" href="developer-overview.html">Developer architecture</a></div>
+</div>
+
+<h2 id="first-program">Your first Glyph program (RP2040 + SSD1306)</h2>
+<pre><code>with RP.GPIO;
+with RP.I2C_Master;
+with RP.Device;
+with Glyph.Display.SSD1306;
+
+procedure Main is
+   I2C  : RP.I2C_Master.I2C_Master_Port renames RP.Device.I2CM_0;
+   SDA  : RP.GPIO.GPIO_Point renames RP.Device.GP8;
+   SCL  : RP.GPIO.GPIO_Point renames RP.Device.GP9;
+
+   OLED : Glyph.Display.SSD1306.Display_T := Glyph.Display.SSD1306.Create;
+begin
+   -- Configure RP2040 I2C pins with pull-ups
+   SDA.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   SCL.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   I2C.Configure (Baudrate => 400_000);
+
+   -- Connect display to hardware bus
+   OLED.Init (I2C'Access);
+   OLED.Clear;
+
+   -- Draw directly to display instance
+   OLED.Paint_Rectangle (0, 0, 128, 64);
+   OLED.Paint_Circle (Center_X => 64, Center_Y => 32, Radius => 18);
+   OLED.Paint_Text (X => 48, Y => 29, Text => "GLYPH");
+
+   -- Flush frame to physical OLED panel
+   OLED.Render;
+end Main;</code></pre>
+<p>Every drawing call operates directly on the display instance. All internal buffers are statically sized with zero heap allocation.</p>
+
+<h2 id="learn">Choose your next step</h2>
+<div class="grid">
+  <a class="card" href="tutorials/index.html">
+    <small>LEARN</small>
+    <b>Beginner tutorials</b>
+    <span>A 9-lesson hands-on guide using SSD1306 and ILI9341 on the RP2040.</span>
+  </a>
+  <a class="card" href="getting-started.html">
+    <small>SETUP</small>
+    <b>Getting started</b>
+    <span>Install the Alire package manager, add Glyph, and compile your first embedded firmware.</span>
+  </a>
+  <a class="card" href="developer-overview.html">
+    <small>UNDERSTAND</small>
+    <b>Developer overview</b>
+    <span>Systems architecture, rendering pipelines, memory model, tile streaming, and simulator internals.</span>
+  </a>
+  <a class="card" href="reference.html">
+    <small>LOOK UP</small>
+    <b>API Reference</b>
+    <span>Full signatures for SSD1306, ILI9341, drawing primitives, colors, and types.</span>
+  </a>
+</div>
+
+<h2 id="pillars">Core architectural pillars</h2>
+<table>
+  <tr><th>Pillar<th>Design Choice &amp; Guarantees</tr>
+  <tr><td><b>Ada 2022 Embedded-First</b><td>Clean, strongly typed APIs built directly for physical microcontroller displays.</td></tr>
+  <tr><td><b>Zero Dynamic Allocation</b><td>No <code>new</code>, no heap allocators, zero fragmentation. Completely static memory footprint.</td></tr>
+  <tr><td><b>Hardware Drivers Included</b><td>Direct drivers for SSD1306 (I2C OLED) and ILI9341 (SPI 16-bit color TFT) using standard Ada HAL.</td></tr>
+  <tr><td><b>Transparent Banding</b><td>Tile streaming for memory-constrained MCUs allows 240x320 color TFT rendering in just 15 KB RAM.</td></tr>
+  <tr><td><b>Desktop Simulator</b><td>Native desktop simulator on virtual buses with dynamic project targeting and BMP/GIF/MP4 export.</td></tr>
+</table>
+
+</article><aside id="toc"></aside></div>
+
+<footer><div class="w"><span>Glyph 1.2.0 · Apache 2.0 License</span><span>Embedded 2D Graphics for Ada 2022</span></div></footer>
+
+<div id="pal"><div><input id="pi" placeholder="Search Glyph documentation…"><div id="pl"></div></div></div>
+
+<script src="docs.js"></script>
+</body></html>

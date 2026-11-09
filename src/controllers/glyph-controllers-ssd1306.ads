@@ -1,14 +1,22 @@
 with HAL.I2C;
 with Glyph.Transport;
 
-package Glyph.Controllers.SSD1306 is
+package Glyph.Controllers.SSD1306 with
+  SPARK_Mode => Off
+is
 
    Default_I2C_Address : constant HAL.I2C.I2C_Address := 16#3C#;
 
-   type Controller (Address : HAL.I2C.I2C_Address := Default_I2C_Address) is
-   tagged limited record
+   type Controller is tagged limited record
+      Address     : HAL.I2C.I2C_Address := Default_I2C_Address;
       Initialized : Boolean := False;
    end record;
+
+   procedure Set_Address
+     (Self : in out Controller; Address : HAL.I2C.I2C_Address);
+
+   function Get_Address
+     (Self : Controller) return HAL.I2C.I2C_Address;
 
    procedure Initialize
      (Self : in out Controller; Bus : in out HAL.I2C.I2C_Port'Class);

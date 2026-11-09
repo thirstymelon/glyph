@@ -13,6 +13,10 @@ alire.lock
 
 # Build output
 build/
+bin/
+obj/
+**/bin/
+**/obj/
 
 # Ada
 *.o
@@ -29,6 +33,16 @@ build/
 *.dll
 *.dylib
 *.exe
+
+# Simulator Generated Media Outputs
+*.bmp
+*.png
+*.ppm
+*.gif
+*.mp4
+
+# Retain documentation assets
+!docs/assets/*
 
 wokwi.toml
 diagram.json

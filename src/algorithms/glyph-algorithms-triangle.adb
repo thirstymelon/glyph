@@ -1,4 +1,6 @@
-package body Glyph.Algorithms.Triangle is
+package body Glyph.Algorithms.Triangle with
+  SPARK_Mode => On
+is
 
    procedure Rasterize_Triangle (Tri : Glyph.Types.Triangle) is
    begin

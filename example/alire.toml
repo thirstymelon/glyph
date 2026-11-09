@@ -1,13 +1,13 @@
 name = "example"
-description = ""
-version = "0.1.0-dev"
-
-authors = ["Lokesh"]
-maintainers = ["Lokesh <lokesh.panditi.29@gmail.com>"]
-maintainers-logins = ["thirstymelon"]
-licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
-website = ""
-tags = []
+description = "RP2040 display example with pico_bsp and Glyph"
+version = "0.1.0"
+licenses = "Apache-2.0"
+authors = ["Lokesh Panditi <lokesh.panditi.29@gmail.com>"]
+maintainers = ["Lokesh Panditi <lokesh.panditi.29@gmail.com>"]
 
 [[depends-on]]
 pico_bsp = "^2.2.0"
+glyph = "*"
+
+[[pins]]
+glyph = { path = ".." }

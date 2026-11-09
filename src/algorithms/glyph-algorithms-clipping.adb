@@ -1,4 +1,6 @@
-package body Glyph.Algorithms.Clipping is
+package body Glyph.Algorithms.Clipping with
+  SPARK_Mode => On
+is
 
    type Outcode is mod 16;
 

@@ -1,0 +1,93 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>API Reference · Glyph 1.2.0</title><link rel="stylesheet" href="styles.css"><link rel="icon" type="image/png" href="assets/logo.png"></head><body data-r=""><header><div class="w"><a class="brand" href="index.html"><img src="assets/logo.png" alt="Glyph"><span>Glyph<i>.</i><sup>1.2.0</sup></span></a><nav><a href="getting-started.html">Start</a><a href="tutorials/index.html">Tutorials</a><a href="developer-overview.html">Developer</a><a href="reference.html" class="on">Reference</a></nav><button class="sb" id="sk">Search <kbd>Ctrl K</kbd></button><button class="mb" id="mb" aria-label="Menu">≡</button></div></header><div class="w doc"><article>
+
+<p class="eb">API Quick Reference</p>
+<h1>Glyph API reference</h1>
+<p class="lead">Complete signatures and procedures for SSD1306 (OLED), ILI9341 (Color TFT), drawing primitives, and color manipulation routines.</p>
+
+<h2 id="ssd1306">SSD1306 Display API (<code>Glyph.Display.SSD1306</code>)</h2>
+<p>The SSD1306 driver provides uniform drawing APIs directly on the <code>Display_T</code> object:</p>
+
+<table>
+  <tr><th>Procedure / Function<th>Signature<th>Description</tr>
+  <tr><td><code>Create</code></td><td><code>() return Display_T</code></td><td>Creates the SSD1306 display instance with its internal framebuffer.</td></tr>
+  <tr><td><code>Init</code></td><td><code>(Self : in out Display_T; Bus : access HAL.I2C.I2C_Port'Class)</code></td><td>Initializes the physical display over the provided I2C peripheral.</td></tr>
+  <tr><td><code>Set_Address</code></td><td><code>(Self : in out Display_T; Address : HAL.I2C.I2C_Address)</code></td><td>Sets the target I2C address (defaults to <code>16#3C#</code>).</td></tr>
+  <tr><td><code>Clear</code></td><td><code>(Self : in out Display_T)</code></td><td>Clears the display framebuffer to black.</td></tr>
+  <tr><td><code>Paint_Pixel</code></td><td><code>(Self : in out Display_T; X, Y : Integer; Color : Monochrome := On)</code></td><td>Plots a pixel with automatic boundary clipping.</td></tr>
+  <tr><td><code>Paint_Line</code></td><td><code>(Self : in out Display_T; X1, Y1, X2, Y2 : Integer)</code></td><td>Bresenham line with fast orthogonal horizontal/vertical bypass.</td></tr>
+  <tr><td><code>Paint_Rectangle</code></td><td><code>(Self : in out Display_T; X, Y, Width, Height : Integer)</code></td><td>Draws an outlined rectangle frame.</td></tr>
+  <tr><td><code>Paint_Filled_Rectangle</code></td><td><code>(Self : in out Display_T; X, Y, Width, Height : Integer)</code></td><td>Draws a filled rectangle or progress bar.</td></tr>
+  <tr><td><code>Paint_Circle</code></td><td><code>(Self : in out Display_T; Center_X, Center_Y, Radius : Integer)</code></td><td>Draws a midpoint circle outline.</td></tr>
+  <tr><td><code>Paint_Filled_Circle</code></td><td><code>(Self : in out Display_T; Center_X, Center_Y, Radius : Integer)</code></td><td>Draws a solid filled circle.</td></tr>
+  <tr><td><code>Paint_Text</code></td><td><code>(Self : in out Display_T; X, Y : Integer; Text : String; Scale : Positive := 1)</code></td><td>Renders ASCII strings using the built-in 5x7 font.</td></tr>
+  <tr><td><code>Render</code></td><td><code>(Self : in out Display_T; Force : Boolean := False)</code></td><td>Flushes the internal buffer to the physical OLED panel over I2C.</td></tr>
+</table>
+
+<h2 id="ili9341">ILI9341 Display API (<code>Glyph.Display.ILI9341</code>)</h2>
+<p>The ILI9341 driver manages 240x320 16-bit color TFT displays over SPI:</p>
+
+<table>
+  <tr><th>Procedure / Function<th>Signature<th>Description</tr>
+  <tr><td><code>Create</code></td><td><code>() return Display_T</code></td><td>Creates the ILI9341 display instance with direct streaming and tile support.</td></tr>
+  <tr><td><code>Init</code></td><td><code>(Self : in out Display_T; SPI : access HAL.SPI.SPI_Port'Class; DC, CS, Reset : access HAL.GPIO.GPIO_Point'Class)</code></td><td>Initializes the physical display and control pins over SPI.</td></tr>
+  <tr><td><code>Clear</code></td><td><code>(Self : in out Display_T; Color : RGB565 := Black)</code></td><td>Clears the display to the specified 16-bit color.</td></tr>
+  <tr><td><code>Paint_Pixel</code></td><td><code>(Self : in out Display_T; X, Y : Integer; Color : RGB565 := White)</code></td><td>Plots a 16-bit color pixel with automatic boundary clipping.</td></tr>
+  <tr><td><code>Paint_Line</code></td><td><code>(Self : in out Display_T; X1, Y1, X2, Y2 : Integer; Color : RGB565 := White)</code></td><td>Bresenham line with fast orthogonal horizontal/vertical bypass.</td></tr>
+  <tr><td><code>Paint_Rectangle</code></td><td><code>(Self : in out Display_T; X, Y, Width, Height : Integer; Color : RGB565 := White)</code></td><td>Draws an outlined rectangle frame.</td></tr>
+  <tr><td><code>Paint_Filled_Rectangle</code></td><td><code>(Self : in out Display_T; X, Y, Width, Height : Integer; Color : RGB565 := White)</code></td><td>Draws a solid filled rectangle with hardware window acceleration.</td></tr>
+  <tr><td><code>Paint_Circle</code></td><td><code>(Self : in out Display_T; Center_X, Center_Y, Radius : Integer; Color : RGB565 := White)</code></td><td>Draws a midpoint circle outline.</td></tr>
+  <tr><td><code>Paint_Filled_Circle</code></td><td><code>(Self : in out Display_T; Center_X, Center_Y, Radius : Integer; Color : RGB565 := White)</code></td><td>Draws a solid filled circle.</td></tr>
+  <tr><td><code>Paint_Triangle</code></td><td><code>(Self : in out Display_T; X1, Y1, X2, Y2, X3, Y3 : Integer; Color : RGB565)</code></td><td>Draws a wireframe 3-point triangle.</td></tr>
+  <tr><td><code>Paint_Filled_Triangle</code></td><td><code>(Self : in out Display_T; X1, Y1, X2, Y2, X3, Y3 : Integer; Color : RGB565)</code></td><td>Draws a solid filled scanline triangle.</td></tr>
+  <tr><td><code>Paint_Text</code></td><td><code>(Self : in out Display_T; X, Y : Integer; Text : String; Color : RGB565 := White; Scale : Positive := 1)</code></td><td>Renders ASCII strings in 16-bit color using the built-in 5x7 font.</td></tr>
+  <tr><td><code>Render</code></td><td><code>(Self : in out Display_T; Force : Boolean := False)</code></td><td>Flushes rendered graphics to the physical display over SPI.</td></tr>
+  <tr><td><code>Render_Scene</code></td><td><code>(Self : in out Display_T; Draw : not null access procedure (Disp : in out Display_T))</code></td><td>Transparent tile streaming: partitions the screen into 32-line bands automatically.</td></tr>
+</table>
+
+<h2 id="colors">Colors &amp; Fixed-Point Manipulation (<code>Glyph.Colors</code>)</h2>
+<table>
+  <tr><th>Function / Constant<th>Signature<th>Description</tr>
+  <tr><td><code>Black</code></td><td><code>constant Monochrome := Off</code></td><td>Monochrome dark pixel.</td></tr>
+  <tr><td><code>White</code></td><td><code>constant Monochrome := On</code></td><td>Monochrome illuminated pixel.</td></tr>
+  <tr><td><code>To_RGB565</code></td><td><code>(R, G, B : UInt8) return RGB565</code></td><td>Packs 8-bit R, G, B channels into a 16-bit RGB565 integer.</td></tr>
+  <tr><td><code>Dim</code></td><td><code>(Color : RGB565; Percent : Natural) return RGB565</code></td><td>Dims color brightness by an integer percentage (0..100%).</td></tr>
+  <tr><td><code>Brighten</code></td><td><code>(Color : RGB565; Percent : Natural) return RGB565</code></td><td>Brightens color towards white by an integer percentage (0..100%).</td></tr>
+  <tr><td><code>Blend</code></td><td><code>(Color_A, Color_B : RGB565; Weight_A : Natural) return RGB565</code></td><td>Linear interpolation between two colors with integer math.</td></tr>
+</table>
+
+<h2 id="types">Geometric Types (<code>Glyph.Types</code>)</h2>
+<pre><code>package Glyph.Types is
+   type Coordinate is range -32_768 .. 32_767;
+   type Dimension  is range 0 .. 32_767;
+   type Angle      is range 0 .. 360;
+
+   type Point is record
+      X, Y : Coordinate;
+   end record;
+
+   type Rectangle is record
+      X, Y          : Coordinate;
+      Width, Height : Dimension;
+   end record;
+
+   type Circle is record
+      Center : Point;
+      Radius : Dimension;
+   end record;
+
+   type Hemisphere_Type is (Top, Bottom, Left, Right);
+end Glyph.Types;</code></pre>
+
+<div class="pn">
+  <a href="developer-overview.html"><small>← Previous</small>Developer overview</a>
+  <a href="index.html"><small>Home →</small>Overview</a>
+</div>
+
+</article><aside id="toc"></aside></div>
+
+<footer><div class="w"><span>Glyph 1.2.0 · Apache 2.0 License</span><span>Embedded 2D Graphics for Ada 2022</span></div></footer>
+
+<div id="pal"><div><input id="pi" placeholder="Search Glyph documentation…"><div id="pl"></div></div></div>
+
+<script src="docs.js"></script>
+</body></html>

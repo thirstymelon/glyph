@@ -1,9 +1,13 @@
 with Glyph.Types;
 
-package Glyph.Algorithms.Circle is
+package Glyph.Algorithms.Circle with
+  SPARK_Mode => On
+is
 
-   function ISin (Deg : Integer) return Integer;
-   function ICos (Deg : Integer) return Integer;
+   function ISin (Deg : Integer) return Integer with
+     Post => ISin'Result in -1000 .. 1000;
+   function ICos (Deg : Integer) return Integer with
+     Post => ICos'Result in -1000 .. 1000;
 
    generic
       with

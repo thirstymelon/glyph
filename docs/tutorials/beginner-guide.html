@@ -1,0 +1,382 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Beginner guide · Glyph 1.2.0</title><link rel="stylesheet" href="../styles.css"><link rel="icon" type="image/png" href="../assets/logo.png"></head><body data-r="../"><header><div class="w"><a class="brand" href="../index.html"><img src="../assets/logo.png" alt="Glyph"><span>Glyph<i>.</i><sup>1.2.0</sup></span></a><nav><a href="../getting-started.html">Start</a><a href="../tutorials/index.html" class="on">Tutorials</a><a href="../developer-overview.html">Developer</a><a href="../reference.html">Reference</a></nav><button class="sb" id="sk">Search <kbd>Ctrl K</kbd></button><button class="mb" id="mb" aria-label="Menu">≡</button></div></header><div class="w doc"><article>
+
+<div class="prog"><span id="pc"></span><i><b id="pb"></b></i></div>
+
+<p class="eb" style="margin-top:36px">Interactive Beginner Course</p>
+<h1>Beginner guide to Glyph</h1>
+<p class="lead">An embedded-first introduction to 2D graphics in Ada 2022 on the RP2040. Every lesson uses real display drivers (SSD1306 OLED and ILI9341 color TFT), complete copy-pasteable programs, and hardware explanations.</p>
+
+<div class="note">
+  <p><b>Hardware Setup:</b> The lessons use a Raspberry Pi Pico (RP2040) with an SSD1306 OLED on I2C (SDA=GP8, SCL=GP9) and an ILI9341 color TFT on SPI (SCK=GP18, MOSI=GP19, CS=GP17, DC=GP20, RST=GP21). All code also runs identically in the desktop simulator.</p>
+</div>
+
+<!-- Lesson 1 -->
+<h2 id="l1">1. SSD1306 Display Initialization (RP2040 I2C)</h2>
+<p>In Glyph, you interact directly with display driver instances. For a monochrome 128x64 OLED, use <code>Glyph.Display.SSD1306</code>.</p>
+<p><b>The Mental Model:</b> We configure the RP2040's hardware I2C port, initialize the display driver, clear its in-memory buffer, and flush it to the screen with <code>OLED.Render</code>.</p>
+
+<pre><code>with RP.GPIO;
+with RP.I2C_Master;
+with RP.Device;
+with Glyph.Display.SSD1306;
+
+procedure Lesson_1 is
+   I2C  : RP.I2C_Master.I2C_Master_Port renames RP.Device.I2CM_0;
+   SDA  : RP.GPIO.GPIO_Point renames RP.Device.GP8;
+   SCL  : RP.GPIO.GPIO_Point renames RP.Device.GP9;
+
+   OLED : Glyph.Display.SSD1306.Display_T := Glyph.Display.SSD1306.Create;
+begin
+   -- Configure I2C pins with internal pull-ups
+   SDA.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   SCL.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   I2C.Configure (Baudrate => 400_000);
+
+   -- Connect OLED to I2C peripheral (defaults to address 0x3C)
+   OLED.Init (I2C'Access);
+
+   -- Clear the screen buffer and push to hardware
+   OLED.Clear;
+   OLED.Render;
+end Lesson_1;</code></pre>
+
+<p><b>Line-by-Line Breakdown:</b></p>
+<ul>
+  <li><code>Glyph.Display.SSD1306.Create(...)</code>: Creates the SSD1306 display instance with its internal 1,024-byte framebuffer allocated statically with zero heap usage.</li>
+  <li><code>OLED.Init (I2C'Access)</code>: Transmits the SSD1306 initialization sequence (charge pump enable, display on, page addressing) over the RP2040 I2C bus.</li>
+  <li><code>OLED.Clear</code>: Clears the display framebuffer to black.</li>
+  <li><code>OLED.Render</code>: Transmits the framebuffer over I2C to the OLED controller.</li>
+</ul>
+
+<details><summary>Exercise 1: Initialize and verify clear screen</summary><div>
+<p>Add a delay before and after clearing to see the screen initialize cleanly on boot:</p>
+<pre><code>RP.Device.Timer.Delay_Milliseconds (50);
+OLED.Clear;
+OLED.Render;</code></pre>
+</div></details>
+<button class="done"></button>
+
+<!-- Lesson 2 -->
+<h2 id="l2">2. Plotting Pixels &amp; Clipping Safety</h2>
+<p>The smallest unit of output is a pixel. Use <code>OLED.Paint_Pixel</code> to illuminate individual pixels at any <code>(X, Y)</code> coordinate.</p>
+<p><b>Automatic Clipping:</b> On a 128x64 display, valid X is <code>0 .. 127</code> and Y is <code>0 .. 63</code>. If your code calculates an out-of-bounds coordinate (like <code>X => 200, Y => 90</code>), Glyph automatically clips it safely without memory corruption or microcontroller hard faults.</p>
+
+<pre><code>with RP.GPIO;
+with RP.I2C_Master;
+with RP.Device;
+with Glyph.Display.SSD1306;
+
+procedure Lesson_2 is
+   I2C  : RP.I2C_Master.I2C_Master_Port renames RP.Device.I2CM_0;
+   SDA  : RP.GPIO.GPIO_Point renames RP.Device.GP8;
+   SCL  : RP.GPIO.GPIO_Point renames RP.Device.GP9;
+
+   OLED : Glyph.Display.SSD1306.Display_T :=
+     Glyph.Display.SSD1306.Create;
+begin
+   SDA.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   SCL.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   I2C.Configure (Baudrate => 400_000);
+   OLED.Init (I2C'Access);
+   OLED.Clear;
+
+   -- Plot the 4 corners of the OLED
+   OLED.Paint_Pixel (X => 0,   Y => 0);
+   OLED.Paint_Pixel (X => 127, Y => 0);
+   OLED.Paint_Pixel (X => 0,   Y => 63);
+   OLED.Paint_Pixel (X => 127, Y => 63);
+
+   -- Out-of-bounds coordinates are safely ignored by the clipping engine
+   OLED.Paint_Pixel (X => 250, Y => 90);
+
+   OLED.Render;
+end Lesson_2;</code></pre>
+
+<details><summary>Exercise 2: Plot a dotted line across the middle</summary><div>
+<p>Use a loop to plot every other pixel along row <code>Y = 32</code>:</p>
+<pre><code>for X in 0 .. 63 loop
+   OLED.Paint_Pixel (X => X * 2, Y => 32);
+end loop;
+OLED.Render;</code></pre>
+</div></details>
+<button class="done"></button>
+
+<!-- Lesson 3 -->
+<h2 id="l3">3. Lines &amp; Bresenham Rasterization</h2>
+<p>Draw lines with <code>OLED.Paint_Line</code>. Glyph implements pure integer Bresenham line stepping with automatic fast orthogonal bypass for horizontal and vertical lines.</p>
+
+<pre><code>with RP.GPIO;
+with RP.I2C_Master;
+with RP.Device;
+with Glyph.Display.SSD1306;
+
+procedure Lesson_3 is
+   I2C  : RP.I2C_Master.I2C_Master_Port renames RP.Device.I2CM_0;
+   SDA  : RP.GPIO.GPIO_Point renames RP.Device.GP8;
+   SCL  : RP.GPIO.GPIO_Point renames RP.Device.GP9;
+   OLED : Glyph.Display.SSD1306.Display_T := Glyph.Display.SSD1306.Create;
+begin
+   SDA.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   SCL.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   I2C.Configure (Baudrate => 400_000);
+   OLED.Init (I2C'Access);
+   OLED.Clear;
+
+   -- Draw an 'X' across the screen
+   OLED.Paint_Line (X1 => 0, Y1 => 0, X2 => 127, Y2 => 63);
+   OLED.Paint_Line (X1 => 127, Y1 => 0, X2 => 0, Y2 => 63);
+
+   -- Horizontal and vertical crosshairs (uses fast bitwise fill)
+   OLED.Paint_Line (X1 => 0, Y1 => 32, X2 => 127, Y2 => 32);
+   OLED.Paint_Line (X1 => 64, Y1 => 0, X2 => 64, Y2 => 63);
+
+   OLED.Render;
+end Lesson_3;</code></pre>
+
+<details><summary>Exercise 3: Draw a diagonal grid</summary><div>
+<p>Draw diagonal hatch lines across the display:</p>
+<pre><code>for Offset in 0 .. 5 loop
+   OLED.Paint_Line (Offset * 25, 0, 0, Offset * 12);
+end loop;
+OLED.Render;</code></pre>
+</div></details>
+<button class="done"></button>
+
+<!-- Lesson 4 -->
+<h2 id="l4">4. Rectangles &amp; Progress Meters</h2>
+<p>Glyph provides <code>OLED.Paint_Rectangle</code> for outline frames and <code>OLED.Paint_Filled_Rectangle</code> for solid bars and meters.</p>
+
+<pre><code>with RP.GPIO;
+with RP.I2C_Master;
+with RP.Device;
+with Glyph.Display.SSD1306;
+
+procedure Lesson_4 is
+   I2C  : RP.I2C_Master.I2C_Master_Port renames RP.Device.I2CM_0;
+   SDA  : RP.GPIO.GPIO_Point renames RP.Device.GP8;
+   SCL  : RP.GPIO.GPIO_Point renames RP.Device.GP9;
+   OLED : Glyph.Display.SSD1306.Display_T := Glyph.Display.SSD1306.Create;
+begin
+   SDA.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   SCL.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   I2C.Configure (Baudrate => 400_000);
+   OLED.Init (I2C'Access);
+   OLED.Clear;
+
+   -- Border frame around the whole display (128x64)
+   OLED.Paint_Rectangle (0, 0, 128, 64);
+
+   -- Progress bar outline
+   OLED.Paint_Rectangle (10, 48, 108, 8);
+
+   -- Filled progress bar (75 pixels filled, 4 pixels tall)
+   OLED.Paint_Filled_Rectangle (12, 50, 75, 4);
+
+   OLED.Render;
+end Lesson_4;</code></pre>
+
+<details><summary>Exercise 4: Draw concentric picture frames</summary><div>
+<p>Draw three nested frames spaced 4 pixels apart:</p>
+<pre><code>for Inset in 0 .. 2 loop
+   OLED.Paint_Rectangle
+     (X      => Inset * 4,
+      Y      => Inset * 4,
+      Width  => 128 - (Inset * 8),
+      Height => 64 - (Inset * 8));
+end loop;
+end loop;
+OLED.Render;</code></pre>
+</div></details>
+<button class="done"></button>
+
+<!-- Lesson 5 -->
+<h2 id="l5">5. Circles, Arcs &amp; Gauges</h2>
+<p>Render circles and gauges with <code>OLED.Paint_Circle</code> and <code>OLED.Paint_Filled_Circle</code> using the midpoint circle algorithm with zero floating-point operations.</p>
+
+<pre><code>with RP.GPIO;
+with RP.I2C_Master;
+with RP.Device;
+with Glyph.Display.SSD1306;
+
+procedure Lesson_5 is
+   I2C  : RP.I2C_Master.I2C_Master_Port renames RP.Device.I2CM_0;
+   SDA  : RP.GPIO.GPIO_Point renames RP.Device.GP8;
+   SCL  : RP.GPIO.GPIO_Point renames RP.Device.GP9;
+   OLED : Glyph.Display.SSD1306.Display_T := Glyph.Display.SSD1306.Create;
+begin
+   SDA.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   SCL.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   I2C.Configure (Baudrate => 400_000);
+   OLED.Init (I2C'Access);
+   OLED.Clear;
+
+   -- Concentric radar rings
+   OLED.Paint_Circle (Center_X => 64, Center_Y => 32, Radius => 24);
+   OLED.Paint_Circle (Center_X => 64, Center_Y => 32, Radius => 14);
+
+   -- Solid center hub
+   OLED.Paint_Filled_Circle (Center_X => 64, Center_Y => 32, Radius => 4);
+
+   OLED.Render;
+end Lesson_5;</code></pre>
+
+<details><summary>Exercise 5: Draw a moon crescent</summary><div>
+<p>Draw a filled circle, then erase an overlapping part to make a crescent:</p>
+<pre><code>OLED.Paint_Filled_Circle (64, 32, 18);
+OLED.Paint_Filled_Circle (70, 28, 16, Color => Glyph.Colors.Off);
+OLED.Render;</code></pre>
+</div></details>
+<button class="done"></button>
+
+<!-- Lesson 6 -->
+<h2 id="l6">6. ILI9341 240x320 SPI Color TFT</h2>
+<p>For high-resolution 16-bit color displays, Glyph provides <code>Glyph.Display.ILI9341</code>. A full 240x320 frame buffer would consume 153.6 KB of RAM, but Glyph's transparent <code>Tile_Stream</code> mode renders in compact 32-row bands using only <b>15 KB of RAM</b>!</p>
+
+<pre><code>with RP.GPIO;
+with RP.SPI;
+with RP.Device;
+with Glyph.Display.ILI9341;
+with Glyph.Colors;
+
+procedure Lesson_6 is
+   SPI   : RP.SPI.SPI_Port renames RP.Device.SPI_0;
+   SCK   : RP.GPIO.GPIO_Point renames RP.Device.GP18;
+   MOSI  : RP.GPIO.GPIO_Point renames RP.Device.GP19;
+   MISO  : RP.GPIO.GPIO_Point renames RP.Device.GP16;
+   CS    : RP.GPIO.GPIO_Point renames RP.Device.GP17;
+   DC    : RP.GPIO.GPIO_Point renames RP.Device.GP20;
+   Reset : RP.GPIO.GPIO_Point renames RP.Device.GP21;
+
+   TFT   : Glyph.Display.ILI9341.Display_T := Glyph.Display.ILI9341.Create;
+begin
+   -- Configure SPI pins
+   SCK.Configure (RP.GPIO.Output, RP.GPIO.Floating, RP.GPIO.SPI);
+   MOSI.Configure (RP.GPIO.Output, RP.GPIO.Floating, RP.GPIO.SPI);
+   MISO.Configure (RP.GPIO.Input, RP.GPIO.Floating, RP.GPIO.SPI);
+   CS.Configure (RP.GPIO.Output, RP.GPIO.Floating, RP.GPIO.SIO);
+   DC.Configure (RP.GPIO.Output, RP.GPIO.Floating, RP.GPIO.SIO);
+   Reset.Configure (RP.GPIO.Output, RP.GPIO.Floating, RP.GPIO.SIO);
+
+   SPI.Configure
+     ((Role => RP.SPI.Master, Baud => 16_000_000, others => <>));
+
+   TFT.Init (SPI => SPI'Access, DC => DC'Access, CS => CS'Access, Reset => Reset'Access);
+
+   -- Draw directly with dot notation
+   TFT.Clear (Glyph.Colors.Black);
+   TFT.Paint_Rectangle (4, 4, 232, 312, Color => Glyph.Colors.White);
+   TFT.Paint_Filled_Circle (120, 160, 40, Color => 16#07E0#); -- Green
+   TFT.Render;
+end Lesson_6;</code></pre>
+<button class="done"></button>
+
+<!-- Lesson 7 -->
+<h2 id="l7">7. Color Shapes &amp; Filled Triangles</h2>
+<p>Render arbitrary 3-point polygons and color shapes on ILI9341 with <code>Paint_Triangle</code> and <code>Paint_Filled_Triangle</code>:</p>
+
+<pre><code>-- Inside your ILI9341 draw procedure:
+procedure Draw_Dashboard (Disp : in out Glyph.Display.ILI9341.Display_T) is
+   C_Red   : constant Glyph.Colors.RGB565 := 16#F800#;
+   C_Cyan  : constant Glyph.Colors.RGB565 := 16#07FF#;
+begin
+   Disp.Clear (Glyph.Colors.Black);
+
+   -- Upward warning indicator triangle
+   Disp.Paint_Filled_Triangle
+     (X1 => 120, Y1 => 40,
+      X2 => 80,  Y2 => 110,
+      X3 => 160, Y3 => 110,
+      Color => C_Red);
+
+   -- Horizontal meter underline
+   Disp.Paint_Line (20, 130, 220, 130, Color => C_Cyan);
+end Draw_Dashboard;</code></pre>
+<button class="done"></button>
+
+<!-- Lesson 8 -->
+<h2 id="l8">8. Text &amp; Bitmap Fonts</h2>
+<p>Render ASCII strings directly onto displays using <code>Paint_Text</code>. Glyph provides the crisp <code>Font_5x7</code> font built-in.</p>
+
+<pre><code>with RP.GPIO;
+with RP.I2C_Master;
+with RP.Device;
+with Glyph.Display.SSD1306;
+
+procedure Lesson_8 is
+   I2C  : RP.I2C_Master.I2C_Master_Port renames RP.Device.I2CM_0;
+   SDA  : RP.GPIO.GPIO_Point renames RP.Device.GP8;
+   SCL  : RP.GPIO.GPIO_Point renames RP.Device.GP9;
+   OLED : Glyph.Display.SSD1306.Display_T := Glyph.Display.SSD1306.Create;
+begin
+   SDA.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   SCL.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   I2C.Configure (Baudrate => 400_000);
+   OLED.Init (I2C'Access);
+   OLED.Clear;
+
+   -- Standard 5x7 ASCII text
+   OLED.Paint_Text (X => 10, Y => 10, Text => "SYS: READY");
+
+   -- Scaled 2x text (10x14 pixels per character)
+   OLED.Paint_Text (X => 10, Y => 30, Text => "24.5 C", Scale => 2);
+
+   OLED.Render;
+end Lesson_8;</code></pre>
+<button class="done"></button>
+
+<!-- Lesson 9 -->
+<h2 id="l9">9. RP2040 Hardware Timer Animation Loop</h2>
+<p>Combine primitives and the RP2040 microsecond hardware timer (<code>RP.Device.Timer</code>) to produce clean, jitter-free 30 FPS animations:</p>
+
+<pre><code>with RP.GPIO;
+with RP.I2C_Master;
+with RP.Device;
+with RP.Device.Timer;
+with Glyph.Display.SSD1306;
+
+procedure Lesson_9 is
+   I2C  : RP.I2C_Master.I2C_Master_Port renames RP.Device.I2CM_0;
+   SDA  : RP.GPIO.GPIO_Point renames RP.Device.GP8;
+   SCL  : RP.GPIO.GPIO_Point renames RP.Device.GP9;
+   OLED : Glyph.Display.SSD1306.Display_T := Glyph.Display.SSD1306.Create;
+
+   Frame : Natural := 0;
+begin
+   SDA.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   SCL.Configure (RP.GPIO.Output, RP.GPIO.Pull_Up, RP.GPIO.I2C, Schmitt => True);
+   I2C.Configure (Baudrate => 400_000);
+   OLED.Init (I2C'Access);
+
+   loop
+      OLED.Clear;
+
+      -- Animate a sweeping radar line
+      declare
+         Sweep_X : constant Integer := (Frame * 4) mod 128;
+      begin
+         OLED.Paint_Line (64, 32, Sweep_X, 0);
+      end;
+
+      OLED.Paint_Rectangle (0, 0, 128, 64);
+      OLED.Paint_Text (10, 48, "SCANNING...");
+      OLED.Render;
+
+      Frame := Frame + 1;
+      RP.Device.Timer.Delay_Milliseconds (33); -- ~30 FPS
+   end loop;
+end Lesson_9;</code></pre>
+<button class="done"></button>
+
+<div class="pn">
+  <a href="index.html"><small>← Overview</small>Tutorials curriculum</a>
+  <a href="../developer-overview.html"><small>Next →</small>Developer overview</a>
+</div>
+
+</article><aside id="toc"></aside></div>
+
+<footer><div class="w"><span>Glyph 1.2.0 · Apache 2.0 License</span><span>Embedded 2D Graphics for Ada 2022</span></div></footer>
+
+<div id="pal"><div><input id="pi" placeholder="Search Glyph documentation…"><div id="pl"></div></div></div>
+
+<script src="../docs.js"></script>
+</body></html>

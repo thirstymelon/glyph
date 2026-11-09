@@ -1,6 +1,8 @@
 with Glyph.Types;
 
-package Glyph.Algorithms.Rectangle is
+package Glyph.Algorithms.Rectangle with
+  SPARK_Mode => On
+is
 
    generic
       with

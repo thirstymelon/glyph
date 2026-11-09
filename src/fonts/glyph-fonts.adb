@@ -1,4 +1,6 @@
-package body Glyph.Fonts is
+package body Glyph.Fonts with
+  SPARK_Mode => On
+is
 
    Font_5x7_Data : aliased constant Glyph_Data :=
      (16#00#, 16#00#, 16#00#, 16#00#, 16#00#,

@@ -1,0 +1,19 @@
+with "../config/glyph_config.gpr";
+with "../glyph.gpr";
+
+project Simulator is
+
+   for Source_Dirs use ("src", "../src/simulator");
+   for Object_Dir use "obj";
+   for Exec_Dir use "bin";
+   for Main use ("simulator_main.adb");
+
+   package Compiler is
+      for Default_Switches ("Ada") use
+        ("-gnat2022",
+         "-gnatwa",
+         "-gnatw.X",
+         "-O2");
+   end Compiler;
+
+end Simulator;

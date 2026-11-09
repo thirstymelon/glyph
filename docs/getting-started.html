@@ -1,0 +1,80 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Getting started · Glyph 1.2.0</title><link rel="stylesheet" href="styles.css"><link rel="icon" type="image/png" href="assets/logo.png"></head><body data-r=""><header><div class="w"><a class="brand" href="index.html"><img src="assets/logo.png" alt="Glyph"><span>Glyph<i>.</i><sup>1.2.0</sup></span></a><nav><a href="getting-started.html" class="on">Start</a><a href="tutorials/index.html">Tutorials</a><a href="developer-overview.html">Developer</a><a href="reference.html">Reference</a></nav><button class="sb" id="sk">Search <kbd>Ctrl K</kbd></button><button class="mb" id="mb" aria-label="Menu">≡</button></div></header><div class="w doc"><article>
+
+<p class="eb">Setup &amp; Installation Guide</p>
+<h1>Getting started with Glyph</h1>
+<p class="lead">Add Glyph to your Ada project, connect your display over I2C or SPI, and build bare-metal firmware for the RP2040.</p>
+
+<h2 id="install">Installing Alire and Toolchain</h2>
+<p>Glyph is built and packaged using <b>Alire</b>, the package manager for Ada. Alire provisions the cross-compiler toolchain (<code>arm-eabi-gnat</code>) and pulls all hardware dependencies (such as <code>rp2040_hal</code> and <code>hal</code>) automatically.</p>
+
+<h3>1. Install Alire</h3>
+<p>Install Alire from your package manager or download it from <a href="https://alire.ada.dev" target="_blank" rel="noopener">alire.ada.dev</a>:</p>
+
+<pre class="sh"><code># On macOS
+brew install alire
+
+# On Debian / Ubuntu
+sudo apt install alire
+
+# On Arch Linux
+sudo pacman -S alire</code></pre>
+
+<h2 id="project-setup">Creating a Project</h2>
+<p>Create a binary project and add Glyph as a dependency:</p>
+
+<pre class="sh"><code># Initialize binary workspace
+alr init --bin my_display_app
+cd my_display_app
+
+# Add dependencies
+alr with glyph
+alr with hal
+alr with rp2040_hal</code></pre>
+
+<h2 id="rp2040-example">Building for RP2040</h2>
+<p>Glyph includes a complete bare-metal RP2040 reference application in <code>example/</code> featuring both SSD1306 (I2C) and ILI9341 (SPI) displays:</p>
+
+<pre class="sh"><code>cd example
+alr build
+
+# Flash to connected RP2040 in bootloader mode
+elf2uf2-rs -d bin/example_main</code></pre>
+
+<div class="note">
+  <p><b>Flashing Tip:</b> Hold the <b>BOOTSEL</b> button on your RP2040 board while connecting USB. It will mount as a mass-storage drive, and <code>elf2uf2-rs -d</code> will convert the ELF and flash it automatically.</p>
+</div>
+
+<h2 id="hardware-wiring">Display Pinout on RP2040</h2>
+<p>The reference configuration uses the following hardware pins on the RP2040:</p>
+
+<table>
+  <tr><th>Display &amp; Protocol<th>RP2040 GPIO Pin<th>Peripheral Function</tr>
+  <tr><td><b>SSD1306 (I2C)</b></td><td><code>GP8</code></td><td>I2C0 SDA</td></tr>
+  <tr><td><b>SSD1306 (I2C)</b></td><td><code>GP9</code></td><td>I2C0 SCL</td></tr>
+  <tr><td><b>ILI9341 (SPI)</b></td><td><code>GP18</code></td><td>SPI0 SCK</td></tr>
+  <tr><td><b>ILI9341 (SPI)</b></td><td><code>GP19</code></td><td>SPI0 MOSI / TX</td></tr>
+  <tr><td><b>ILI9341 (SPI)</b></td><td><code>GP16</code></td><td>SPI0 MISO / RX</td></tr>
+  <tr><td><b>ILI9341 (SPI)</b></td><td><code>GP17</code></td><td>Chip Select (CS)</td></tr>
+  <tr><td><b>ILI9341 (SPI)</b></td><td><code>GP20</code></td><td>Data / Command (DC)</td></tr>
+  <tr><td><b>ILI9341 (SPI)</b></td><td><code>GP21</code></td><td>Hardware Reset (RST)</td></tr>
+</table>
+
+<h2 id="desktop-simulator">Host Desktop Simulator</h2>
+<p>For rapid UI development without physical hardware, compile and run the native desktop simulator:</p>
+
+<pre class="sh"><code>alr exec -- gprbuild -P simulator/simulator.gpr
+./simulator/bin/simulator_main</code></pre>
+
+<div class="pn">
+  <a href="index.html"><small>← Home</small>Overview</a>
+  <a href="tutorials/index.html"><small>Next →</small>Beginner tutorials</a>
+</div>
+
+</article><aside id="toc"></aside></div>
+
+<footer><div class="w"><span>Glyph 1.2.0 · Apache 2.0 License</span><span>Embedded 2D Graphics for Ada 2022</span></div></footer>
+
+<div id="pal"><div><input id="pi" placeholder="Search Glyph documentation…"><div id="pl"></div></div></div>
+
+<script src="docs.js"></script>
+</body></html>

@@ -1,4 +1,6 @@
-package Glyph.Types is
+package Glyph.Types with
+  SPARK_Mode => On
+is
 
    subtype Coordinate is Integer;
    subtype Dimension is Natural;

@@ -1,6 +1,8 @@
 with Glyph.Transport;
 
-package Glyph.Fonts is
+package Glyph.Fonts with
+  SPARK_Mode => On
+is
 
    type Glyph_Data is array (Positive range <>) of Glyph.Transport.Byte;
 

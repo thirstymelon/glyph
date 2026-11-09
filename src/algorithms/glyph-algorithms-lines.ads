@@ -1,6 +1,8 @@
 with Glyph.Types;
 
-package Glyph.Algorithms.Lines is
+package Glyph.Algorithms.Lines with
+  SPARK_Mode => On
+is
 
    generic
       with

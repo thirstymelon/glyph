@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tutorials · Glyph 1.2.0</title><link rel="stylesheet" href="../styles.css"><link rel="icon" type="image/png" href="../assets/logo.png"></head><body data-r="../"><header><div class="w"><a class="brand" href="../index.html"><img src="../assets/logo.png" alt="Glyph"><span>Glyph<i>.</i><sup>1.2.0</sup></span></a><nav><a href="../getting-started.html">Start</a><a href="../tutorials/index.html" class="on">Tutorials</a><a href="../developer-overview.html">Developer</a><a href="../reference.html">Reference</a></nav><button class="sb" id="sk">Search <kbd>Ctrl K</kbd></button><button class="mb" id="mb" aria-label="Menu">≡</button></div></header><div class="w doc"><article>
+
+<p class="eb">Interactive Curriculum</p>
+<h1>Learn Glyph <em>on real displays.</em></h1>
+<p class="lead">A progressive, embedded-focused curriculum using SSD1306 (I2C OLED) and ILI9341 (SPI TFT) on the RP2040. Every lesson features working hardware code, step-by-step explanations, and interactive progress tracking.</p>
+
+<div class="note">
+  <p><b>Embedded Workflow:</b> Follow the code examples in the <a href="beginner-guide.html">Beginner Guide</a>. All programs run directly on the Raspberry Pi Pico RP2040 or in the host simulator.</p>
+</div>
+
+<ol class="les">
+  <li><div><a href="beginner-guide.html#l1">1. SSD1306 Display Initialization</a><p>Set up RP2040 I2C pins (GP8/GP9), create an SSD1306 display instance, and clear the screen.</p></div></li>
+  <li><div><a href="beginner-guide.html#l2">2. Plotting Pixels &amp; Clipping Safety</a><p>Plot individual pixels directly on the OLED with <code>OLED.Paint_Pixel</code> and explore automatic bounds clipping.</p></div></li>
+  <li><div><a href="beginner-guide.html#l3">3. Lines &amp; Bresenham Rasterization</a><p>Draw diagonal, horizontal, and vertical lines with <code>OLED.Paint_Line</code>, leveraging fast orthogonal bypass paths.</p></div></li>
+  <li><div><a href="beginner-guide.html#l4">4. Rectangles &amp; Progress Meters</a><p>Render outlined and filled rectangles with <code>OLED.Paint_Rectangle</code> and <code>OLED.Paint_Filled_Rectangle</code>.</p></div></li>
+  <li><div><a href="beginner-guide.html#l5">5. Circles, Arcs &amp; Gauges</a><p>Draw midpoint circle outlines, filled discs, and curved dial arcs with <code>OLED.Paint_Circle</code> and <code>OLED.Paint_Filled_Circle</code>.</p></div></li>
+  <li><div><a href="beginner-guide.html#l6">6. ILI9341 240x320 SPI Color TFT</a><p>Configure RP2040 SPI0 pins, initialize an ILI9341 color display in transparent <code>Tile_Stream</code> mode, and paint with 16-bit RGB565 colors.</p></div></li>
+  <li><div><a href="beginner-guide.html#l7">7. Color Shapes &amp; Filled Triangles</a><p>Render geometric triangles and polygons on ILI9341 with <code>TFT.Paint_Triangle</code> and <code>TFT.Paint_Filled_Triangle</code>.</p></div></li>
+  <li><div><a href="beginner-guide.html#l8">8. Text &amp; Bitmap Fonts</a><p>Render ASCII text strings on screen with <code>OLED.Paint_Text</code> and <code>TFT.Paint_Text</code>, with custom fonts, scaling, and color overrides.</p></div></li>
+  <li><div><a href="beginner-guide.html#l9">9. RP2040 Hardware Timer Animation Loop</a><p>Build a jitter-free 30 FPS animation loop using the RP2040 64-bit hardware timer (<code>RP.Device.Timer</code>).</p></div></li>
+</ol>
+
+<div class="pn">
+  <a href="../getting-started.html"><small>← Previous</small>Getting started</a>
+  <a href="beginner-guide.html"><small>Next →</small>Beginner guide</a>
+</div>
+
+</article><aside id="toc"></aside></div>
+
+<footer><div class="w"><span>Glyph 1.2.0 · Apache 2.0 License</span><span>Embedded 2D Graphics for Ada 2022</span></div></footer>
+
+<div id="pal"><div><input id="pi" placeholder="Search Glyph documentation…"><div id="pl"></div></div></div>
+
+<script src="../docs.js"></script>
+</body></html>
