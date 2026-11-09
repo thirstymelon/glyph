@@ -8,13 +8,12 @@ Built on standard **Ada HAL (`HAL.I2C`, `HAL.SPI`)**, Glyph provides embedded-fi
 
 ## Documentation
 
-Full interactive documentation, beginner tutorials, and architecture guides are available in the **[`docs/`](docs/)** directory. Open **[`docs/index.html`](docs/index.html)** in any web browser:
+Full interactive documentation, beginner tutorials, and architecture guides are available online at **[thirstymelon.github.io/glyph](https://thirstymelon.github.io/glyph/)**:
 
-- **[Getting Started](docs/getting-started.html)**: Toolchain installation, project setup, and flashing RP2040 firmware.
-- **[Beginner Tutorials](docs/tutorials/index.html)**: 9-lesson hands-on curriculum using SSD1306 and ILI9341 on the RP2040.
-- **[Developer Overview](docs/developer-overview.html)**: Systems architecture, rendering pipelines, memory model, tile streaming, and simulator internals.
-- **[API Reference](docs/reference.html)**: Signatures and routines for display drivers, primitives, and color manipulation.
-
+- **[Getting Started](https://thirstymelon.github.io/glyph/getting-started.html)**: Toolchain installation, project setup, and flashing RP2040 firmware.
+- **[Beginner Tutorials](https://thirstymelon.github.io/glyph/tutorials/index.html)**: 9-lesson hands-on curriculum using SSD1306 and ILI9341 on the RP2040.
+- **[Developer Overview](https://thirstymelon.github.io/glyph/developer-overview.html)**: Systems architecture, rendering pipelines, memory model, tile streaming, and simulator internals.
+- **[API Reference](https://thirstymelon.github.io/glyph/reference.html)**: Signatures and routines for display drivers, primitives, and color manipulation.
 ---
 
 ## Features
