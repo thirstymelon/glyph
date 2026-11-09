@@ -1,4 +1,4 @@
-# Glyph
+# ✦ Glyph
 
 Glyph is a lightweight, zero-heap 2D graphics framework for bare-metal embedded systems, written in **Ada 2022**.
 

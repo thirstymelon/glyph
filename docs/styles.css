@@ -15,6 +15,7 @@ a{color:var(--green-2);text-underline-offset:3px}
 header{position:sticky;top:0;z-index:9;background:rgba(255,254,250,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
 header .w{display:flex;align-items:center;height:72px;gap:28px}
 .brand{display:flex;align-items:center;gap:10px;font:700 23px var(--serif);text-decoration:none;color:var(--green)}
+.brand-mark{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:var(--paper-2);border:1px solid var(--line);color:var(--coral);font-size:19px;line-height:1}
 .brand img{width:34px;height:34px;border-radius:9px;object-fit:contain;display:block}.brand i{color:var(--coral);font-style:normal}.brand sup{font:10px var(--mono);color:var(--muted);margin-left:6px}
 header nav{display:flex;gap:clamp(13px,2.2vw,30px);margin-left:auto;align-items:center}
 header nav a{font-size:14px;font-weight:600;color:var(--muted);text-decoration:none;padding:7px 0;border-bottom:2px solid transparent;transition:.18s}
