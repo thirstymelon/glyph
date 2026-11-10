@@ -37,95 +37,254 @@ procedure Example_Main is
 
    Current_Frame : Natural := 0;
 
-   --  SSD1306 OLED Music Player Design ("Sailor Song" by Gigi Perez)
+   --  SSD1306 Bento Menu (Home, Music, Settings, Alarm with Active Highlight)
    procedure Draw_SSD1306 (Frame : Natural) is
-      use Ada.Numerics;
-      use Ada.Numerics.Elementary_Functions;
+      use Glyph.Colors;
 
-      Phase : constant Float := Float (Frame mod 60) * (2.0 * Pi / 60.0);
+      --  4-State Selection Cycle (15 frames each = 60 frames total)
+      Sel : constant Natural := (Frame / 15) mod 4;
 
-      --  Spool rotation angles (both spools spin steadily)
-      Spool_Ang : constant Float := Phase * 3.0;
-
-      --  Smooth full-width timeline scrubber (X: 4 .. 122)
-      Scrub_X : constant Integer := 4 + (Frame mod 60) * 118 / 59;
-
-      procedure Draw_Spool (CX, CY : Integer) is
+      procedure Draw_Pixel
+        (X, Y : Integer; Col : Glyph.Colors.Monochrome) is
       begin
-         OLED.Paint_Circle (CX, CY, 4);
-         OLED.Paint_Filled_Circle (CX, CY, 1);
+         OLED.Paint_Pixel (X, Y, Col);
+      end Draw_Pixel;
 
-         --  3 rotating spokes per spool
-         for S in 0 .. 2 loop
-            declare
-               Spoke_Ang : constant Float :=
-                 Spool_Ang + Float (S) * (2.0 * Pi / 3.0);
-               SX        : constant Integer :=
-                 CX + Integer (3.0 * Cos (Spoke_Ang));
-               SY        : constant Integer :=
-                 CY + Integer (3.0 * Sin (Spoke_Ang));
-            begin
-               OLED.Paint_Line (CX, CY, SX, SY);
-            end;
+      procedure Draw_HLine
+        (X, Y, W : Integer; Col : Glyph.Colors.Monochrome) is
+      begin
+         for I in 0 .. W - 1 loop
+            OLED.Paint_Pixel (X + I, Y, Col);
          end loop;
-      end Draw_Spool;
+      end Draw_HLine;
 
+      procedure Draw_VLine
+        (X, Y, H : Integer; Col : Glyph.Colors.Monochrome) is
+      begin
+         for I in 0 .. H - 1 loop
+            OLED.Paint_Pixel (X, Y + I, Col);
+         end loop;
+      end Draw_VLine;
+
+      procedure Draw_Line
+        (X1, Y1, X2, Y2 : Integer; Col : Glyph.Colors.Monochrome)
+      is
+         DX  : constant Integer := abs (X2 - X1);
+         DY  : constant Integer := abs (Y2 - Y1);
+         SX  : constant Integer := (if X1 < X2 then 1 else -1);
+         SY  : constant Integer := (if Y1 < Y2 then 1 else -1);
+         Err : Integer := DX - DY;
+         CX  : Integer := X1;
+         CY  : Integer := Y1;
+         E2  : Integer;
+      begin
+         loop
+            OLED.Paint_Pixel (CX, CY, Col);
+            exit when CX = X2 and then CY = Y2;
+            E2 := 2 * Err;
+            if E2 > -DY then
+               Err := Err - DY;
+               CX  := CX + SX;
+            end if;
+            if E2 < DX then
+               Err := Err + DX;
+               CY  := CY + SY;
+            end if;
+         end loop;
+      end Draw_Line;
    begin
       OLED.Clear;
 
-      --  Top Status Bar
-      OLED.Paint_Text (4, 1, "> PLAY");
-      OLED.Paint_Text (52, 1, "VOL ||.");
-      OLED.Paint_Text (96, 1, "FLAC");
-      OLED.Paint_Line (0, 9, 127, 9);
+      --  Top Header Bar (Clean & Minimal)
+      OLED.Paint_Text (5, 1, "09:41", Color => On);
 
-      --  Left Side: Retro-Modern Cassette Tape (X: 4..40, Y: 13..45)
-      --  Outer cassette shell
-      OLED.Paint_Rectangle (4, 13, 38, 29);
-      --  Inner tape window
-      OLED.Paint_Rectangle (10, 18, 26, 14);
+      --  Battery indicator on the right
+      OLED.Paint_Rectangle (108, 1, 14, 7);
+      OLED.Paint_Pixel (122, 3, On);
+      OLED.Paint_Pixel (122, 4, On);
+      OLED.Paint_Pixel (122, 5, On);
+      OLED.Paint_Filled_Rectangle (110, 3, 9, 3);
 
-      --  Tape spools
-      Draw_Spool (16, 25);
-      Draw_Spool (30, 25);
+      --  Header divider line
+      OLED.Paint_Line (3, 9, 124, 9);
 
-      --  Magnetic tape guide line
-      OLED.Paint_Line (16, 29, 30, 29);
+      --  1. Top-Left Bento Card: HOME (X=3..53, Y=12..34)
+      declare
+         Active : constant Boolean := (Sel = 0);
+         Fg     : constant Glyph.Colors.Monochrome :=
+           (if Active then Off else On);
+      begin
+         if Active then
+            OLED.Paint_Filled_Rectangle (3, 12, 51, 23);
+         else
+            OLED.Paint_Rectangle (3, 12, 51, 23);
+         end if;
 
-      --  Cassette bottom trapezoid bevel
-      OLED.Paint_Line (10, 42, 14, 38);
-      OLED.Paint_Line (14, 38, 28, 38);
-      OLED.Paint_Line (28, 38, 32, 42);
+         --  Chimney on the roof (X=16)
+         Draw_VLine (16, 16, 4, Fg);
 
-      --  Right Side: Song Information
-      OLED.Paint_Text (48, 13, "SAILOR SONG");
-      OLED.Paint_Text (48, 22, "GIGI PEREZ");
+         --  House Roof (Peak at 14, 17)
+         Draw_Line (14, 17, 10, 21, Fg);
+         Draw_Line (14, 17, 18, 21, Fg);
+         Draw_HLine (10, 21, 9, Fg);
 
-      --  Dynamic 8-Channel Audio Spectrum Equalizer (X: 48..124, Y: 33..43)
-      for B in 0 .. 7 loop
-         declare
-            Band_F : constant Float := Float (B) * 0.85 + Phase * 3.0;
-            H_Raw  : constant Float := (Sin (Band_F) + 1.0) / 2.0;
-            H      : constant Integer := 2 + Integer (H_Raw * 8.0);
-            Bar_X  : constant Integer := 48 + B * 5;
-         begin
-            OLED.Paint_Filled_Rectangle (Bar_X, 43 - H, 3, H);
-         end;
-      end loop;
+         --  House Body & Base
+         Draw_VLine (11, 21, 6, Fg);
+         Draw_VLine (17, 21, 6, Fg);
+         Draw_HLine (11, 26, 7, Fg);
 
-      --  Sampling rate badge
-      OLED.Paint_Text (94, 34, "48kHz");
+         --  Door
+         Draw_VLine (13, 23, 4, Fg);
+         Draw_VLine (15, 23, 4, Fg);
+         Draw_HLine (13, 23, 3, Fg);
 
-      --  Bottom Section: Full-Width Scrubber & Controls
-      --  Scrubber track & moving playhead
-      OLED.Paint_Line (4, 49, 123, 49);
-      OLED.Paint_Line (4, 49, Scrub_X, 49);
-      OLED.Paint_Filled_Rectangle (Scrub_X - 1, 47, 3, 5);
+         --  Animated Chimney Smoke and Lit Window when Active
+         if Active then
+            declare
+               S1_Y : constant Integer := 15 - ((Frame mod 6) * 3 / 4);
+               S1_X : constant Integer := 16 + ((Frame mod 6) / 2);
+               S2_Y : constant Integer := 15 - (((Frame + 3) mod 6) * 3 / 4);
+               S2_X : constant Integer := 16 + (((Frame + 3) mod 6) / 2);
+            begin
+               if S1_Y >= 13 then
+                  Draw_Pixel (S1_X, S1_Y, Fg);
+               end if;
+               if S2_Y >= 13 then
+                  Draw_Pixel (S2_X, S2_Y, Fg);
+               end if;
+            end;
+            --  Lit Attic Window in gable
+            Draw_Pixel (14, 19, Fg);
+         end if;
 
-      --  Timestamps & transport indicators
-      OLED.Paint_Text (4, 55, "01:14");
-      OLED.Paint_Text (46, 55, "|<<  ||  >>|");
-      OLED.Paint_Text (92, 55, "-02:37");
+         OLED.Paint_Text (23, 19, "HOME", Color => Fg);
+      end;
+
+      --  2. Top-Right Bento Card: MUSIC (X=56..124, Y=12..34)
+      declare
+         Active  : constant Boolean := (Sel = 1);
+         Fg      : constant Glyph.Colors.Monochrome :=
+           (if Active then Off else On);
+         NX      : constant Integer := 69;
+         Phase_M : constant Natural := Frame mod 8;
+         --  Syncopated bobbing of the two note heads
+         B1      : constant Integer :=
+           (if Active and then (Phase_M in 2 .. 5) then 1 else 0);
+         B2      : constant Integer :=
+           (if Active and then (Phase_M in 0 .. 1 or else Phase_M in 6 .. 7)
+            then 1 else 0);
+      begin
+         if Active then
+            OLED.Paint_Filled_Rectangle (56, 12, 69, 23);
+         else
+            OLED.Paint_Rectangle (56, 12, 69, 23);
+         end if;
+
+         --  Double Beamed Note Icon (Dancing to the beat when active)
+         --  Stem 1 and Head 1 (bobs with B1)
+         Draw_VLine (NX + 2, 18 - B1, 7, Fg);
+         Draw_HLine (NX, 24 - B1, 4, Fg);
+         Draw_HLine (NX, 25 - B1, 4, Fg);
+
+         --  Stem 2 and Head 2 (bobs with B2)
+         Draw_VLine (NX + 7, 17 - B2, 7, Fg);
+         Draw_HLine (NX + 5, 23 - B2, 4, Fg);
+         Draw_HLine (NX + 5, 24 - B2, 4, Fg);
+
+         --  Connecting dynamic top beam (follows both note heads)
+         Draw_Line (NX + 2, 18 - B1, NX + 7, 17 - B2, Fg);
+         Draw_Line (NX + 2, 19 - B1, NX + 7, 18 - B2, Fg);
+
+         --  Radiating sound vibration accent when active
+         if Active and then (Phase_M mod 4 < 2) then
+            Draw_Pixel (NX + 9, 15 - B2, Fg);
+            Draw_Pixel (NX + 10, 14 - B2, Fg);
+         end if;
+
+         --  Centered Text (X=83, baseline matches note head at Y=25)
+         OLED.Paint_Text (83, 19, "MUSIC", Color => Fg);
+      end;
+
+      --  3. Bottom-Left Bento Card: ALARM (X=3..53, Y=38..60)
+      declare
+         Active : constant Boolean := (Sel = 3);
+         Fg     : constant Glyph.Colors.Monochrome :=
+           (if Active then Off else On);
+         AX     : constant Integer := 8;
+         AY     : constant Integer := 45;
+      begin
+         if Active then
+            OLED.Paint_Filled_Rectangle (3, 38, 51, 23);
+         else
+            OLED.Paint_Rectangle (3, 38, 51, 23);
+         end if;
+
+         --  Twin-Bell Alarm Clock Icon (Width: 9, Height: 8)
+         --  Top bells & snooze button (Row 0..1)
+         Draw_HLine (AX, AY, 2, Fg);
+         Draw_HLine (AX + 7, AY, 2, Fg);
+         Draw_Pixel (AX + 1, AY + 1, Fg);
+         Draw_Pixel (AX + 4, AY + 1, Fg);
+         Draw_Pixel (AX + 7, AY + 1, Fg);
+
+         --  Round Clock Body (Row 2..6)
+         Draw_HLine (AX + 2, AY + 2, 5, Fg);
+         Draw_Pixel (AX + 1, AY + 3, Fg);
+         Draw_Pixel (AX + 7, AY + 3, Fg);
+         Draw_Pixel (AX + 1, AY + 4, Fg);
+         Draw_Pixel (AX + 7, AY + 4, Fg);
+         Draw_Pixel (AX + 1, AY + 5, Fg);
+         Draw_Pixel (AX + 7, AY + 5, Fg);
+         Draw_HLine (AX + 2, AY + 6, 5, Fg);
+
+         --  Clock Hands (12:15 - hour hand up, minute hand right)
+         Draw_Pixel (AX + 4, AY + 3, Fg);
+         Draw_HLine (AX + 4, AY + 4, 2, Fg);
+
+         --  Clock Feet (Row 7)
+         Draw_Pixel (AX + 1, AY + 7, Fg);
+         Draw_Pixel (AX + 7, AY + 7, Fg);
+
+         --  Ringing vibration waves when active
+         if Active and then (Frame mod 4 < 2) then
+            Draw_Pixel (AX - 2, AY, Fg);
+            Draw_Pixel (AX - 2, AY + 1, Fg);
+            Draw_Pixel (AX + 10, AY, Fg);
+            Draw_Pixel (AX + 10, AY + 1, Fg);
+         end if;
+
+         OLED.Paint_Text (21, 46, "ALARM", Color => Fg);
+      end;
+
+      --  4. Bottom-Right Bento Card: SETTINGS (X=56..124, Y=38..60)
+      declare
+         Active : constant Boolean := (Sel = 2);
+         Fg     : constant Glyph.Colors.Monochrome :=
+           (if Active then Off else On);
+         SX     : constant Integer := 61;
+         K1     : constant Integer :=
+           (if Active then SX + 2 + ((Frame mod 15) / 3) else SX + 3);
+         K2     : constant Integer :=
+           (if Active then SX + 8 - ((Frame mod 15) / 3) else SX + 7);
+      begin
+         if Active then
+            OLED.Paint_Filled_Rectangle (56, 38, 69, 23);
+         else
+            OLED.Paint_Rectangle (56, 38, 69, 23);
+         end if;
+
+         --  Slider 1 Track & Knob
+         Draw_HLine (SX, 44, 11, Fg);
+         Draw_VLine (K1, 42, 5, Fg);
+         Draw_VLine (K1 + 1, 42, 5, Fg);
+
+         --  Slider 2 Track & Knob
+         Draw_HLine (SX, 52, 11, Fg);
+         Draw_VLine (K2, 50, 5, Fg);
+         Draw_VLine (K2 + 1, 50, 5, Fg);
+
+         OLED.Paint_Text (75, 46, "SETTINGS", Color => Fg);
+      end;
    end Draw_SSD1306;
 
    --  ILI9341 240x320 16-bit Color Calculator Design
